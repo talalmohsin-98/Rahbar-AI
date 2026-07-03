@@ -1,0 +1,14 @@
+fastapi 
+uvicorn 
+langgraph 
+langchain 
+langchain-groq
+langchain-core
+langchain-classic 
+psycopg2-binary 
+pgvector 
+pypdf 
+beautifulsoup4 
+python-dotenv 
+mcp
+sentence-transformers

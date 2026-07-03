@@ -1,0 +1,7 @@
+rahbar_ai/
+venv/
+.env
+__pycache__/
+*.pyc
+node_modules/
+dist/
