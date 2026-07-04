@@ -1,0 +1,297 @@
+SOURCE: https://www.nadra.gov.pk/identityDocument/cnic
+DEPARTMENT: NADRA (National Database and Registration Authority)
+LAST VERIFIED: 2026-07-04
+
+## CNIC OVERVIEW
+
+Computerised National Identity Card (CNIC) is an identity document issued by NADRA under Section 9 & 10 of NADRA Ordinance, 2000. This serves as official proof of a citizen's identity, nationality and legal status within Pakistan.
+
+Types of CNIC:
+- CNIC (Computerised National Identity Card): Standard Teslin-based identity card issued to adult citizens.
+- Smart CNIC: An advanced card with a secure microchip, enhanced security features, and improved durability.
+- CNIC with QR-code: A newer version of CNIC containing a machine-readable QR-code to facilitate faster verification and authentication of the cardholder's data.
+
+## NEW CNIC — APPLY FOR NEW CNIC
+
+Eligibility:
+CNIC is issued to all Pakistani Citizens in or out of Pakistan, who has attained the age of 18 years and has either not been previously registered with NADRA or is a holder of a Child Registration Certificate (CRC) / Juvenile Card.
+
+Requirements:
+- Identity card number of parent(s) or blood relative(s) OR Biometric witness by an ID holder along with undertaking "B" (as per format) if applicant has no blood relative (for System Independent cases only)
+- Computerised Birth certificate (verified) of UC / Municipal Committee / Cantonment or Citizenship / Naturalization certificate
+- Biometric verification of Parent or Blood relative OR Attestation of CNIC as per Regulation 9 (a-h)
+
+Process of applying through NADRA Registration Centre:
+1. Token Acquisition — Obtain a Queue Matic token upon arrival.
+2. Biometric Capture — Digital capture of live photograph and fingerprints.
+3. Data Entry — Personal information is entered into the system and reviewed for accuracy.
+4. Application Attestation — Attestation by anyone of the parent, sibling, or a Gazetted Officer.
+5. OIC Interview / Approval — A brief interview conducted by the Officer-In-Charge.
+6. Payment — Submission of the required processing fee.
+7. Card Printing — Card is printed.
+
+Process of applying through PakID App:
+- Download the PakID mobile app
+- Create your account or sign in
+- Select "New CNIC"
+- Fill in your personal details
+- Upload required documents
+- Visit a NADRA Registration Centre (if required)
+- Track your application status in the app
+
+## CNIC RENEWAL
+
+Eligibility:
+As per Rule 12 of NADRA (NIC) Rules, 2002, a citizen shall at any time but not later than one month after the date of expiry or early termination of validity period, must apply for renewal of his/her card.
+
+Requirements:
+- CNIC number
+
+Process of applying through NADRA Registration Centre:
+1. Token Acquisition — Obtain a Queue Matic token upon arrival.
+2. Biometric Capture — Digital capture of live photograph and fingerprints.
+3. OIC Interview / Approval — A brief interview conducted by the Officer-In-Charge.
+4. Payment — Submission of the required processing fee.
+5. Card Printing — Card is printed.
+
+## CNIC UPDATE / MODIFY
+
+Eligibility:
+As per Rule 13 of NADRA (NIC) Rules, 2022, a person is eligible to apply for a change in their card if he/she requires any modification or correction in the card details.
+
+Requirements:
+Please refer to the Chapter "Change / Correction in Identity Documents" of NADRA Registration Policy available on NADRA website. (Note: exact document list is not published on the public CNIC page — verify at a NADRA Registration Centre for case-specific requirements.)
+
+Process of applying through NADRA Registration Centre:
+1. Token Acquisition — Obtain a Queue Matic token upon arrival.
+2. Biometric Capture — Digital capture of live photograph and fingerprints.
+3. Data Entry — Personal information is entered into the system and reviewed for accuracy.
+4. OIC Interview / Approval — A brief interview conducted by the Officer-In-Charge.
+5. Payment — Submission of the required processing fee.
+6. Card Printing — Card is printed.
+
+## CNIC MODIFICATION — COMMONLY REQUIRED DOCUMENTS (SECONDARY SOURCE — NOT OFFICIALLY PUBLISHED BY NADRA)
+
+NADRA's own CNIC page does not publish a specific document checklist for modification cases — it only refers applicants to the "Change / Correction in Identity Documents" chapter of the NADRA Registration Policy, which is not itself published in accessible form on the public site. The following is compiled from multiple independent third-party guides (not NADRA directly) describing what NADRA Registration Centres commonly request in practice. Treat this tier as practical guidance, not an official guarantee — a citizen should still confirm requirements at the counter, and the system should represent this section with lower confidence than officially-sourced sections above.
+
+By modification type, commonly requested documents:
+- **Name correction/change:** A name-change affidavit (on prescribed stamp paper) attested by an Oath Commissioner; the applicant's old CNIC/NICOP; biometric verification of the applicant together with a blood relative at the NADRA centre (or attestation by a Gazetted Officer if no blood relative is available); supporting documents such as a Nikahnama (marriage certificate) for a name change due to marriage, or a matriculation/educational certificate if correcting a spelling error to match other official records.
+- **Address change:** Original CNIC plus proof of the new address — a utility bill, rent agreement, or property ownership documents in the applicant's or an immediate family member's name.
+- **Date of birth correction:** Union Council-issued Birth Certificate and/or B-Form (Child Registration Certificate); if the applicant holds education beyond matriculation, matching correction of DOB on those educational certificates may also be requested.
+- **Birthplace correction:** Original CNIC, original Union Council birth certificate, and original B-Form.
+
+**System behavior for this topic:** answer using this section only when explicitly asked about modification documents, and explicitly caveat that this reflects common practice reported by third parties rather than a NADRA-published requirement — do not state it with the same confidence as the officially-sourced sections of this corpus.
+
+
+
+Eligibility:
+As per Rule 13 of NADRA (NIC) Rules, 2002, a person is eligible to apply for a duplicate card if his/her original card has been lost, stolen, or has become damaged or unusable.
+
+Requirements:
+- CNIC number
+
+Process of applying through NADRA Registration Centre:
+1. Token Acquisition — Obtain a Queue Matic token upon arrival.
+2. Biometric Capture — Digital capture of live photograph and fingerprints.
+3. OIC Interview / Approval — A brief interview conducted by the Officer-In-Charge.
+4. Payment — Submission of the required processing fee.
+5. Card Printing — Card is printed.
+
+## WHERE TO APPLY (CNIC / NICOP / FRC)
+
+Available channels:
+- NADRA Registration Centres (NRCs)
+- NADRA Mega Centres
+- Mobile Registration Vans
+- Home Delivery Service
+- e-Sahulat Franchises
+- Overseas Counters / Centres
+- PakID Mobile App
+
+**Finding your nearest specific location:** this corpus does not maintain a live directory of individual center addresses, operating hours, or real-time queue status — that data changes independently of the procedural information above and would require a separate, continuously-refreshed data feed rather than a static document corpus (an explicit, deliberate architectural boundary, not an oversight). For the nearest specific location, direct citizens to the PakID mobile app's centre locator, or the "Where to Apply" section of nadra.gov.pk, both of which maintain current addresses and hours directly.
+
+## NICOP OVERVIEW (National Identity Card for Overseas Pakistanis)
+
+National Identity Card for Overseas Pakistanis (NICOP) is an identity document issued by NADRA under Section 12 of NADRA Ordinance, 2000 to Pakistani citizens residing abroad. NICOP serves as official proof of identity and nationality for Pakistanis living overseas and allows visa-free entry into Pakistan.
+
+Types of NICOP:
+- NICOP (National Identity Card for Overseas Pakistanis): Standard Teslin-based NICOP. Currently, new Teslin-based NICOPs are not being issued.
+- Smart NICOP: An advanced card with a secure microchip, enhanced security features, and improved durability.
+- NICOP with QR-code: A newer version containing a machine-readable QR-code for faster verification.
+
+## NEW NICOP
+
+Eligibility — NICOP is issued to Pakistani citizens who are residing abroad and meet any of the following conditions:
+- Pakistani citizens living or working outside Pakistan
+- Pakistani citizens holding dual nationality of a country recognized by the Government of Pakistan
+- Pakistani citizens who intend to stay abroad for an extended period and require proof of identity and nationality
+- Children of Pakistani citizens born abroad who are eligible to be registered as Pakistani citizens
+
+Requirements:
+- Identity card number of parent(s) or blood relative(s) OR Biometric witness by an ID holder along with undertaking "B" (as per format) if applicant has no blood relative (for System Independent cases only)
+- Computerised Birth certificate (verified) of UC / Municipal Committee / Cantonment or Citizenship / Naturalization certificate (For non-residents)
+- Foreign detailed Birth certificate or manual Birth certificate or SI form issued by Embassy / Mission or Citizenship or Naturalization certificate (For non-residents)
+- Pakistani / Foreign passport or residence permit or Travel document or Undertaking "A" duly attested by Pakistan Embassy / Mission — Refer clauses (d & e) of Rule 8 (4) (For non-residents)
+- Biometric verification of Parent or Blood relative OR Attestation of CNIC as per Regulation 9 (a-h) (For inland DAUs only) OR Verification of Application Form by any ID holder (For applicants applying from abroad only)
+
+## NICOP RENEWAL
+
+Eligibility:
+As per Rule 12 of NADRA (NIC) Rules, 2002, a citizen shall at any time but not later than one month after the date of expiry or early termination of validity period, must apply for renewal of his/her card.
+
+Requirements:
+- NICOP number
+- Pakistani / Foreign passport or residence permit or Travel document or Undertaking "A" duly attested by Pakistan Embassy / Mission — Refer clauses (d & e) of Rule 8 (4) (For non-residents)
+
+Note: Biometric verification and photograph may require a visit to a NADRA Registration Centre.
+
+## NICOP UPDATE / MODIFY
+
+Eligibility:
+As per Rule 13 of NADRA (NIC) Rules, 2022, a person is eligible to apply for a change in their card if he/she requires any modification or correction in the card details.
+
+Requirements:
+Please refer to the Chapter "Change / Correction in Identity Documents" of NADRA Registration Policy available on NADRA website. (Note: same documentation gap as CNIC Modification above — see the "CNIC MODIFICATION — COMMONLY REQUIRED DOCUMENTS" section for third-party-sourced practical guidance; the same document categories generally apply, with non-residents additionally needing Pakistani/foreign passport or attested Undertaking "A" per Rule 8(4), consistent with other NICOP transaction types in this corpus.)
+
+## NICOP REPRINT / LOST
+
+Eligibility:
+As per Rule 13 of NADRA (NIC) Rules, 2002, a person is eligible to apply for a duplicate card if his/her original card has been lost, stolen, or has become damaged or unusable.
+
+Requirements:
+- NICOP number
+- Pakistani / Foreign passport or residence permit or Travel document or Undertaking "A" duly attested by Pakistan Embassy / Mission — Refer clauses (d & e) of Rule 8 (4) (For non-residents)
+
+## FAMILY REGISTRATION CERTIFICATE (FRC)
+
+Family Registration Certificate means a certificate issued by the Authority which reflects, verifies and provides a record of the family composition data of a registered person. FRC is a document issued by NADRA under Rule 19 of the NADRA (NIC) Rules, 2002. FRC serves as valid proof of family composition data and is generally used for immigration, visa processing and other legal or administrative purposes.
+
+Types of FRC:
+- By Birth: Includes details of parents and siblings.
+- By Marriage: Includes details of spouse and children.
+- By Adoption: Includes details of guardian and adopted family members.
+- By All: Includes details of both alpha and beta family members.
+
+Eligibility:
+To be eligible for a FRC, all family members should be registered with NADRA and have a valid 13-digit identification number. However, unregistered deceased and alive (in certain scenarios) individuals can also be included. Particulars of such family members are mentioned as per information provided by the applicant.
+
+Requirements:
+- 13-digit ID number of the applicant (CRC / Juvenile Card / CNIC / NICOP / POC)
+
+Process of applying through NADRA Registration Centre:
+1. Token Acquisition — Obtain a Queue Matic token upon arrival.
+2. Biometric Verification — Biometric verification of applicant and children (if applicable).
+3. Photo Capture — Photographs of children (if the CRC was issued without a photograph).
+4. Data Retrieval and Review — Data will be downloaded and reviewed for accuracy.
+5. Payment — Submission of the required processing fee.
+6. FRC Printing — FRC is printed.
+
+## FEE STRUCTURE — CNIC, SMART CNIC, CRC, FRC, CANCELLATION (in PKR)
+
+Format: Identity Document Type | Normal (fee / days) | Urgent (fee / days) | Executive (fee / days)
+
+New CNIC | 0/- / 15 days | 1,150/- / 12 days | 2,150/- / 06 days
+CNIC Modification | 400/- / 15 days | 1,150/- / 12 days | 2,150/- / 06 days
+Duplicate CNIC | 400/- / 15 days | 1,150/- / 12 days | 2,150/- / 06 days
+CNIC Renewal | 400/- / 15 days | 1,150/- / 12 days | 2,150/- / 06 days
+New Smart NIC | 750/- / 31 days | 1,500/- / 23 days | 2,500/- / 09 days
+Smart NIC Modification | 750/- / 31 days | 1,500/- / 23 days | 2,500/- / 09 days
+Smart NIC Duplicate | 750/- / 31 days | 1,500/- / 23 days | 2,500/- / 09 days
+Smart NIC Renewal | 750/- / 31 days | 1,500/- / 23 days | 2,500/- / 09 days
+CNIC/CRC Cancellation (due to death) | 0 / 1 day | - | -
+CRC (All categories) | PKR 50/- / 7 days | - | PKR 500/- / 01 day
+FRC (Alpha / Beta / Gama family) | - | - | PKR 1000/- / 01 day
+FRC (Both) | - | - | PKR 2000/- / 01 day
+
+## FEE STRUCTURE — SMART NICOP, ZONE A (USD) — USA and Europe
+
+New Smart NICOP | Normal: USD 39/- / 31 days | Urgent: USD 57/- / 23 days | Executive: USD 75/- / 09 days
+Smart NICOP Modification | Normal: USD 39/- / 31 days | Urgent: USD 57/- / 23 days | Executive: USD 75/- / 09 days
+Smart NICOP Duplicate | Normal: USD 39/- / 31 days | Urgent: USD 57/- / 23 days | Executive: USD 75/- / 09 days
+Smart NICOP Renewal | Normal: USD 39/- / 31 days | Urgent: USD 57/- / 23 days | Executive: USD 75/- / 09 days
+NICOP Cancellation (due to death) | Normal: USD 0/- / 01 day | - | -
+
+## FEE STRUCTURE — SMART NICOP, ZONE B (USD) — Middle East and Africa
+
+New Smart NICOP | Normal: USD 20/- / 31 days | Urgent: USD 30/- / 23 days | Executive: USD 40/- / 09 days
+Smart NICOP Modification | Normal: USD 20/- / 31 days | Urgent: USD 30/- / 23 days | Executive: USD 40/- / 09 days
+Smart NICOP Duplicate | Normal: USD 20 / 31 days | Urgent: USD 30 / 23 days | Executive: USD 140 / 09 days
+Smart NICOP Renewal | Normal: USD 20/- / 31 days | Urgent: USD 30/- / 23 days | Executive: USD 40/- / 09 days
+NICOP/CNIC/CRC Cancellation (due to Nationality Surrender) | Normal: USD 0/- / 01 day | - | -
+NICOP/CNIC/CRC Cancellation (due to Nationality Surrender, Executive) | - | - | USD 15 / 02 days
+
+## FEE STRUCTURE — SMART POC (Pakistan Origin Card, in USD)
+
+New POC | Normal: USD 150/- / 31 days | Urgent: USD 200/- / 23 days | Executive: USD 250/- / 09 days
+POC Modification | Normal: USD 200/- / 31 days | Urgent: USD 250/- / 23 days | Executive: USD 300/- / 09 days
+POC Duplicate | Normal: USD 200/- / 31 days | Urgent: USD 250/- / 23 days | Executive: USD 300/- / 09 days
+POC Renewal | Normal: USD 150/- / 31 days | Urgent: USD 200/- / 23 days | Executive: USD 250/- / 09 days
+POC Cancellation (due to death) | Executive: USD 25 / 02 days
+POC Cancellation due to Divorce | Executive: USD 25 / 02 days
+POC Cancellation due to surrender of Nationality | Executive: USD 15 / 02 days
+
+## FEE STRUCTURE — UPDATING NON-PRINTABLE FIELDS
+
+CNIC / NICOP (From NRC) | Fee: Rs. 100/- | Timeline: 02 days
+CNIC / NICOP (From PakID Mobile App) | Fee: USD 5/- | Timeline: 02 days
+POC | Fee: USD 30/- | Timeline: 02 days
+
+## FEE STRUCTURE — CLEARANCE OF MULTIPLE IDENTITY CARDS
+
+Similar Particular or particular with slight difference | Normal: USD 10/- | Executive: - | Region: Zone (A, B)
+With different particular | Normal: USD 250/- | Executive: USD 500/- | Region: Zone A countries
+With different particular | Normal: USD 120/- | Executive: USD 200/- | Region: Zone B countries
+Similar Particular or particular with slight difference | Normal: PKR 1,000/- | Executive: PKR 20,000/- | Region: Inland
+With different particular | Normal: PKR 10,000/- | Executive: PKR 20,000/- | Region: Inland
+
+## FEE STRUCTURE — AGE MODIFICATION IN ID CARDS
+
+Up to 1 year | Inland: Rs. 1,000/- | Abroad: USD 15/-
+More than 1 year and up to 2 years | Inland: 2,000/- | Abroad: USD 25/-
+More than 2 years and up to 3 years | Inland: 3,000/- | Abroad: USD 40/-
+More than 3 years | Inland: 5,000/- | Abroad: USD 65/-
+Second time age change | Inland: 10,000/- | Abroad: USD 125/-
+
+## FEE STRUCTURE — SUCCESSION CERTIFICATE
+
+For asset worth equal to or more than Rs. 100,000/-:
+- New / Fresh application: Rs. 20,000/- (Rs. 22,000/- in case of Sindh)
+- Duplicate Application: Rs. 5,000/-
+- Amended Application: Rs. 5,000/-
+- Decline on Processed application: Rs. 15,000/-
+- Office Mistake: Free of Cost
+
+For asset worth less than Rs. 100,000/-:
+- New / Fresh application: Rs. 10,000/-
+- Duplicate Application: Rs. 5,000/-
+- Amended Application: Rs. 5,000/-
+- Decline on Processed application: Rs. 15,000/-
+- Office Mistake: Free of Cost
+
+## DELIVERY CHARGES (ID Cards)
+
+Abroad Delivery: Varies from country to country
+Within Pakistan: PKR 165/-
+
+## VALIDITY PERIOD OF ID CARDS AND CERTIFICATES
+
+CNIC, Smart CNIC / NICOP for Adults: 10 years
+Smart NICOP for minors: 10 years
+Smart NICOP for minors above 14 years of age: 10 years
+Smart NICOP for minors below 14 years of age: For 10 years or 18 years (whichever comes first)
+Juvenile Card: Upon attaining the age of 10 and 18 years
+CRC: Attaining the age of 3 or 10 or 18 years
+Smart POC (Ex-Pakistani, Parents based, FPO family members based): 07 years
+
+## PROCEDURE OF MULTIPLE/DUPLICATE (INTERNATIONAL)
+
+1. Affidavit/declaration as per attached specimen.
+2. Applicant will deposit the fee in NADRA online account.
+
+Bank Details for Fee Deposit:
+- Bank Name: Bank Limited
+- Branch: Foreign Office Branch, Islamabad
+- IBAN No: PK45 HABB 0004 6000 5101 0801
+- Swift Code: HABBPKKA
+
+The applicants can directly forward their affidavits and fee receipt through an email at dup.op@nadra.gov.pk for further processing.

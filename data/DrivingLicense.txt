@@ -1,0 +1,73 @@
+SOURCE: https://trafficpolice.punjab.gov.pk/learner_permit, https://trafficpolice.punjab.gov.pk/regular_driving_licence, https://dlims.punjab.gov.pk/, https://excise.punjab.gov.pk/
+DEPARTMENT: Traffic Police Punjab / Punjab Excise, Taxation & Narcotics Control Department (DLIMS — Driving License Issuance & Management System)
+LAST VERIFIED: 2026-07-04
+
+## OVERVIEW
+
+DLIMS (Driving License Issuance and Management System) is the Government of Punjab's integrated platform for driving license issuance, renewal, and verification, operating under Traffic Police Punjab in partnership with the Punjab Information Technology Board (PITB), and is now also accessible through the Punjab "Dastak" one-window government services app.
+
+**Important scope note for this corpus:** this section covers Punjab specifically. Driving license procedures, fees, and issuing authorities differ in other provinces (Sindh, KPK, Balochistan) and in Islamabad Capital Territory — this corpus does not currently cover those jurisdictions.
+
+## LICENSE TYPES
+
+- **Learner Permit** — a temporary permit allowing a new driver to practice under supervision, issued before the driving test.
+- **Regular (Permanent) Driving License** — issued after passing the required test(s); valid for a period of 1 to 5 years depending on category and payment selected.
+- **Renewal** — for an expired or near-expiry license.
+- **Duplicate License** — issued if the original is lost or damaged.
+- **International Driving Permit** — allows a Pakistani license holder to drive legally abroad.
+
+Vehicle categories: Motorcycle, Car/Jeep (non-commercial), LTV (Light Transport Vehicle — taxis, small vans, pickups), HTV (Heavy Transport Vehicle — buses, large trucks/trailers), PSV (Public Service Vehicle — passenger-carrying commercial vehicles), Tractor (Agricultural and Commercial), and Rickshaw.
+
+## LEARNER PERMIT — REQUIREMENTS (OFFICIAL, Traffic Police Punjab)
+
+Required documents:
+- Original CNIC, plus a photocopy
+- A ticket of Rs. 60 for each vehicle category applied for (issued by the General Post Office and the Learner's Permit Office)
+- Medical certificate, issued by an authorized medical practitioner
+
+Learner permits are issued on a daily basis and are valid for 6 months. Applicants also receive a Highway Code Book of traffic rules and regulations at the time of application.
+
+Age criteria by category (official):
+| Category | Minimum Age |
+|---|---|
+| Motorcycle / Motorcar | 18 years |
+| LTV, Rickshaw, Tractor (Commercial) | 21 years |
+| HTV | 22 years |
+
+A learner permit must generally be held for a minimum period (commonly cited as around 42 days in secondary sources, not independently confirmed on the official Traffic Police Punjab page) before the applicant can sit for the practical driving test — treat this specific waiting-period figure as unconfirmed and recommend the applicant verify current timing when booking their test.
+
+## REGULAR (PERMANENT) DRIVING LICENSE — REQUIREMENTS (OFFICIAL, Traffic Police Punjab)
+
+Required documents:
+- Original CNIC
+- Medical certificate, issued by an authorized medical practitioner
+- Medical Fitness Certificate — additionally required only for applicants aged 50 years or above
+
+**Note on the permanent license application channel:** unlike the Learner Permit, the general public's Permanent Driving License process still requires an in-person visit to a Traffic Police office to obtain the physical smart card — it is not fully completed online. Applicants short on time are advised to secure the Learner Permit online first (to remain legally compliant while practicing) and complete the permanent license process in person when able.
+
+## FEES — KNOWN GAP, WITH PARTIAL OFFICIAL CONFIRMATION
+
+- **Learner Permit fee: Rs. 60 per category** — this is directly confirmed on the official Traffic Police Punjab page.
+- **Regular/Permanent License fee schedule:** the official Traffic Police Punjab page presents this fee table as an embedded image rather than extractable text, so this corpus could not directly confirm exact current per-category figures from the primary source. Secondary sources report figures in the following ranges, but they are **not fully consistent with each other** and should be treated with real caution:
+  - Motorcycle: commonly cited around Rs. 550–930 (figures vary depending on whether courier/banking charges are included)
+  - Car/LTV: commonly cited around Rs. 950–2,330 (wide variation across sources, likely reflecting different assumptions about included charges)
+  - HTV: commonly cited around Rs. 800–1,850
+  - Renewal: commonly cited around Rs. 200–500 depending on category and lapse period
+
+**System behavior: do not state a specific permanent-license fee figure as confirmed fact.** State the confirmed Rs. 60 learner permit fee with confidence. For the permanent license fee, tell the citizen the exact amount is calculated automatically and displayed as a PSID (Payment Slip ID) at the time of application on the official DLIMS portal (dlims.punjab.gov.pk), and that published secondary estimates vary too much across sources to state a single reliable number here — this is an honest gap caused by the official source publishing fees as an image rather than as text, not a research shortfall.
+
+## APPLICATION PROCESS (LEARNER PERMIT, ONLINE VIA DLIMS)
+
+1. Fill out the online application form with required personal details.
+2. System generates a PSID (Payment Slip ID) for the calculated fee.
+3. Pay via the PSID through mobile banking, online banking, or designated bank branches.
+4. Once payment is confirmed, the application proceeds to administrative review.
+5. Upon approval, the applicant is notified and the learner permit is processed and dispatched.
+
+## PAYMENT METHOD (OFFICIAL POLICY DIRECTION)
+
+The Government of Punjab has directed that all license-related fees be paid exclusively through the digital PSID system — cash payments are not accepted at licensing centers, to reduce opportunities for informal/unofficial payments. A generated PSID is valid for a limited time and is linked to the specific application and fee amount.
+
+## VERIFICATION / STATUS TRACKING
+
+Citizens can verify or track a license via the DLIMS portal (dlims.punjab.gov.pk) or the Dastak app, by entering their CNIC number. The system displays whether the license is in process, printed, ready for delivery, or delivered, and can confirm whether a physical license is genuine and registered in the DLIMS database.

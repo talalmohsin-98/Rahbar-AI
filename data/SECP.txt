@@ -1,0 +1,74 @@
+SOURCE: https://www.secp.gov.pk/start-your-company/, https://www.secp.gov.pk/company-formation/stepwise-procedure-for-online-company-incorporation/ (official LEAP User Manual), https://www.secp.gov.pk/company-formation/fee-calculator/schedule-of-feesixth-schedule/
+DEPARTMENT: SECP (Securities and Exchange Commission of Pakistan)
+LAST VERIFIED: 2026-07-04
+
+## OVERVIEW — COMPANY REGISTRATION IN PAKISTAN
+
+Any three or more persons associated for a lawful purpose may, by subscribing their names to the Memorandum of Association and complying with the requirements of the Companies Act, form a public company; any two or more persons so associated may, in like manner, form a private company. If only one member forms a private company, it is called a Single Member Company (SMC-Private Limited).
+
+An applicant may apply for incorporation either offline or online, and may submit the application with the normal fee or through Fast Track Registration Services (FTRS) for urgent processing — SECP's own site states FTRS processing completes in 4 hours.
+
+## SINGLE MEMBER COMPANY (SMC-PRIVATE LIMITED) — KEY FEATURES
+
+An SMC has only one shareholder and one director, and both must be the same person (the sole trader becomes both the sole director and sole shareholder). Key features:
+- The company continues to exist as a separate legal entity even after the death of the sole member — ownership transfers to legal heirs via a mandatory **nominee**, appointed at the time of company registration.
+- The nominee must be a major (18 years or older).
+- The company name must be unique and must end with "(SMC-Private) Limited."
+- SMC registration provides limited liability protection, a distinct legal identity from the owner, and perpetual succession, benefits not available to an unregistered sole proprietorship.
+
+## HOW TO REGISTER — ONLINE INCORPORATION VIA LEAP/eZfile PORTAL
+
+This process is confirmed directly from SECP's official LEAP (Leading Efficiency through Automation Prowess) User Manual.
+
+### Step 1: User Registration
+- Applicant creates an account on the LEAP portal (leap.secp.gov.pk).
+- Sign-up requires selecting Pakistani Citizen (CNIC or NICOP holder) or Foreign National.
+- For CNIC/NICOP holders: the system verifies the CNIC/NICOP directly against NADRA records — if verification fails, the applicant cannot proceed until a valid CNIC is entered.
+- Mobile number is verified against PMD (telecom) records via OTP (valid 2 minutes); email is verified via a separate OTP (valid 5 minutes).
+- After 3 incorrect OTP attempts, the system temporarily blocks further signup attempts for 30 minutes.
+- Once registration is complete, the applicant's username for future logins is their CNIC/NICOP/Passport number.
+- A 4-digit PIN (used to digitally "sign" all future SECP filings) is generated and emailed to the applicant as a password-protected attachment.
+
+### Step 2: Name Reservation
+- The applicant searches for a proposed company name and checks availability; the system flags exact matches with already-reserved names or names containing prohibited/restricted words.
+- The applicant selects the company type, provides the principal line of business/sector, and may add supporting documents if their proposed name partially resembles an existing one.
+- The name reservation fee (per SECP's official Promoters' Guide) is **Rs. 200 for online application and Rs. 500 for offline application**, per name.
+- **Payment must be made within 7 days of application submission** — if payment is not made within this window, the system automatically cancels the application.
+
+### Step 3: Incorporation (Permission to Form and Incorporation)
+Once a name is reserved and approved, the applicant proceeds to incorporation:
+- Fill in company information: capital structure, registered office address, contact information.
+- Add stakeholder details: for an SMC, this includes adding the sole member/director and the mandatory **nominee** (searchable by CNIC/NICOP/Passport if already SECP-registered).
+- Foreign subscribers/directors/shareholders must submit a specific undertaking (available on SECP's site) for incorporation and subsequent return filing, and must upload passport, photo, biodata, and the undertaking duly certified by a public officer/notary of their country of origin and signed by a Pakistani diplomat posted there.
+- Review/edit the Memorandum of Association (MOA) and Articles of Association (AOA) — both can be downloaded directly from the portal.
+- Provide third-party registration information: FBR registration is **mandatory** at this stage; EOBI/PESSI/SESSI/BESSI (social security institutions) registration is optional.
+- A Declarant (either the applicant/proposed director, or an Authorized Intermediary) applies their PIN to finalize and submit the application.
+- Payment can be made via Credit/Debit Card or 1-Bill payment channels — again, **must be completed within 7 days of submission**, or the application is cancelled by the system.
+
+## DOCUMENTS REQUIRED (SUMMARY)
+
+- CNIC (Pakistani nationals) or Passport (foreign nationals) of all subscribers/directors/nominee
+- Memorandum of Association (MOA) and Articles of Association (AOA) — can be drafted using SECP's own templates/portal tools, or customized
+- Proof of registered office address
+- For foreign subscribers: passport, photograph, biodata, and the specific attested undertaking described above
+
+## FAST TRACK REGISTRATION SERVICES (FTRS)
+
+For urgent processing (SECP's own site states 4-hour turnaround), the applicant generates an M-challan for the FTRS fee via SECP's manual challan portal. Fee structure for FTRS is published separately by SECP as a downloadable document (Fast-Track-Registration-System.docx) — this corpus does not have the exact current FTRS fee figure confirmed; treat as a gap and direct the citizen to SECP's official FTRS fee document rather than guessing an amount.
+
+## INCORPORATION FEE — KNOWN GAP
+
+SECP's official fee schedule ("Seventh Schedule") is published as a periodically-updated downloadable document (most recently referenced update: 20.04.2023) rather than as page text, and this corpus was not able to extract exact current per-capital-slab incorporation fee figures directly from it. Secondary/consultant sources commonly cite an approximate range of **PKR 3,000–5,000 for SMC incorporation depending on authorized capital**, but this corpus has only moderate confidence in that specific range since it wasn't cross-verified against the official Seventh Schedule document itself. **System behavior: state the name reservation fee (Rs. 200 online / Rs. 500 offline) with full confidence since it's directly SECP-sourced; for the incorporation fee itself, give the commonly-cited approximate range but explicitly flag it as unconfirmed against the current official fee schedule, and recommend the citizen use SECP's own Company Incorporation Fee Calculator (available on secp.gov.pk) for an exact figure.**
+
+## POST-INCORPORATION ANNUAL COMPLIANCE
+
+Once incorporated, a company (including an SMC) has ongoing filing obligations via the same LEAP portal, including:
+- **Annual Accounts** — audited financial statements filed annually.
+- **Annual Return** — company particulars (directors, officers, shareholders, capital structure) filed annually; a tick mark confirms completion.
+- **Ultimate Beneficial Ownership (UBO) Declaration** — mandatory annual declaration; if UBO filing is not applicable in a given year (per SECP Circular 21/2018), the applicant confirms this via a "No" selection.
+- **Global Register of Beneficial Ownership** — required in specific circumstances per the same 2018 circular.
+- Changes in registered office address, changes in directors/officers, changes in shareholding of more than 25%, and increases in authorized capital are all filed as separate, distinct processes through the same portal — each carries its own statutory form and, in most cases, a 7-day payment window before the system cancels the filing.
+
+## CONTACT / REGISTRATION OFFICES
+
+SECP has Company Registration Offices (CROs) in major cities including Islamabad, Karachi, Lahore, and other cities; incorporation can also be completed fully online without visiting a CRO in person, via the LEAP/eZfile portal.

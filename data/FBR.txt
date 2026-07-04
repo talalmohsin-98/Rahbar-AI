@@ -1,0 +1,170 @@
+SOURCE: https://www.fbr.gov.pk/ (Income Tax section) + verified current reporting on Finance Act 2026 changes (see notes below)
+DEPARTMENT: FBR (Federal Board of Revenue)
+LAST VERIFIED: 2026-07-04
+
+## INCOME TAX BASICS
+
+Before registration and filing of an Income Tax Return, a taxpayer should understand a few basic concepts.
+
+Taxable Income: Total Income reduced by donations qualifying straight for deductions and certain deductible allowances.
+
+Total Income: The aggregate of Income chargeable to Tax under each head of Income.
+
+Heads of Income (under the Income Tax Ordinance, 2001, all income is broadly divided into five heads):
+- Salary
+- Income from property
+- Income from business
+- Capital gains
+- Income from Other Sources
+
+Resident (Individual): An individual is Resident for a Tax Year if they meet any of:
+- Present in Pakistan for 183 days or more in the tax year
+- Present in Pakistan for 120 days or more in the tax year, and in the four preceding years has been in Pakistan for 365 days or more in aggregate
+- Is an employee/official of the Federal or a Provincial Government posted abroad in the Tax Year
+
+Resident (Association of Persons): Resident if the control and management of its affairs is situated wholly or partly in Pakistan at any time in that year.
+
+Resident (Company): Resident if it is incorporated/formed under Pakistani law, OR its control and management is situated wholly in Pakistan at any time in the year, OR it is a Provincial or local Government in Pakistan.
+
+Non-Resident: An individual, AOP, or Company not meeting Resident criteria for that year.
+
+Tax Year: A 12-month period ending 30th June (the financial year), denoted by the calendar year in which that date falls. Example: the 12 months from July 1, 2024 to June 30, 2025 is Tax Year 2025. This is the Normal Tax Year. Tax Year 2026 covers income earned from July 1, 2025 to June 30, 2026.
+
+Special Tax Year: Any other 12-month period, denoted by the calendar year relevant to the Normal Tax Year in which its closing date falls.
+
+## WHO MUST FILE A RETURN
+
+Under Section 114 of the Income Tax Ordinance, 2001, a person is generally required to file an income tax return for a tax year if any of the following applied during that year:
+- They owned land, a house, or any other immovable property above prescribed thresholds
+- They owned a motor vehicle
+- They earned income from salary, business, property, capital gains, or other sources above the taxable threshold
+- They held an NTN (National Tax Number) from a prior year's registration, even if current income is nil
+- They wish to maintain or restore Active Taxpayer List (ATL) status
+
+Even a "nil return" (zero or below-threshold income) should be filed if a person is already registered/has an NTN, specifically to preserve ATL status.
+
+## INCOME TAX SLABS FOR SALARIED INDIVIDUALS — TAX YEAR 2026 (income earned 1 July 2025 – 30 June 2026, filed by 30 September 2026)
+
+Under the Finance Act 2025, currently in effect for the tax year being filed now, salaried individuals (defined as those whose salary income constitutes more than 75% of total taxable income) are taxed as follows:
+
+| Annual Taxable Salary | Tax Rate |
+|---|---|
+| Up to Rs. 600,000 | 0% (fully exempt) |
+| Rs. 600,001 – Rs. 1,200,000 | 1% of the amount exceeding Rs. 600,000 |
+| Rs. 1,200,001 – Rs. 2,200,000 | Rs. 6,000 + 11% of the amount exceeding Rs. 1,200,000 |
+| Rs. 2,200,001 – Rs. 3,200,000 | Rs. 116,000 + 23% of the amount exceeding Rs. 2,200,000 |
+| Rs. 3,200,001 – Rs. 4,100,000 | Rs. 346,000 + 30% of the amount exceeding Rs. 3,200,000 |
+| Above Rs. 4,100,000 | Rs. 616,000 + 35% of the amount exceeding Rs. 4,100,000 |
+
+Additional surcharge: a 9% surcharge applies on the income tax payable (not on income directly) where taxable income exceeds Rs. 10 million in the tax year.
+
+Worked examples (annual tax, illustrative):
+- Monthly salary Rs. 50,000 (Rs. 600,000/year): Rs. 0 tax — fully exempt.
+- Monthly salary Rs. 100,000 (Rs. 1,200,000/year): 1% × Rs. 600,000 = Rs. 6,000/year (≈ Rs. 500/month).
+- Monthly salary Rs. 150,000 (Rs. 1,800,000/year): Rs. 6,000 + 11% × Rs. 600,000 = Rs. 72,000/year (≈ Rs. 6,000/month).
+
+(This table is cross-corroborated across multiple independent tax-calculator and tax-advisory sources describing the Finance Act 2025 slabs, and is consistent with the structure described on FBR's own site regarding heads of income and progressive taxation. Precise per-rupee figures should still be periodically re-verified against FBR's official notification, since Finance Act changes are annual.)
+
+**Forward-looking note — Tax Year 2027 changes already announced:** FBR's own official Budget 2026-27 Salient Features document (published on fbr.gov.pk) confirms that salaried individual tax rates are being restructured again, effective for Tax Year 2027 (income from 1 July 2026 onward): additional intermediate slabs are being introduced, and the income threshold for the top 35% rate is being raised from Rs. 4.1 million to Rs. 7 million. Some reporting also indicates the 9% high-income surcharge described above may be abolished from Tax Year 2027, though this corpus has lower confidence in that specific claim than in the official slab-threshold change. **System behavior: if a citizen asks about tax rates for income earned after 1 July 2026 (Tax Year 2027), flag that a restructuring is confirmed to be underway and recommend confirming exact new figures on FBR's official site once the Finance Act 2026 is fully notified, rather than presenting the Tax Year 2026 table above as still applicable.**
+
+### Non-Salaried / Business Individual and AOP Slabs — KNOWN GAP
+
+Business individuals, sole proprietors, freelancers not meeting the "salaried" 75% threshold, and Associations of Persons (AOPs) are taxed under a different, generally higher slab structure than salaried individuals. This corpus does not currently contain a confidently-verified, current-year slab table for this category — available sources for the current tax year were less consistent with each other than the salaried table above, and this corpus does not present unverified figures as fact. **System behavior: if asked for exact non-salaried/business/AOP tax slabs, acknowledge that this specific breakdown is not confidently available in the current corpus and recommend the citizen confirm directly on FBR's official Withholding Tax Rates / Income Tax Basics pages or with a tax professional, rather than generating a plausible-sounding but unverified table.**
+
+
+
+The first step of filing an Income Tax Return is registering with FBR.
+- Individuals can register online through the Iris Portal (iris.fbr.gov.pk).
+- The principal officer of an Association of Persons (AOP) or a Company needs to visit a Regional Tax Office (RTO) in person.
+
+## HOW TO FILE YOUR OWN RETURN (STEP BY STEP)
+
+1. Log in to Iris (iris.fbr.gov.pk) using your registered credentials. First-time users complete e-enrollment first (CNIC, mobile number, email — verified via OTP).
+2. From the Iris dashboard, go to Declaration and select Income Tax Return for the relevant Tax Year.
+3. Complete the Return of Income form: enter all applicable income (salary, business, property, capital gains, other sources).
+4. Complete the Wealth Statement (statement of assets & liabilities) form. This is mandatory alongside the Return of Income — a return cannot be successfully submitted without it.
+5. Reconcile your Wealth Statement: your declared wealth must increase or decrease from the previous year by an amount consistent with your declared income minus your declared expenses. If this doesn't reconcile, Iris will not allow submission.
+6. Salaried persons whose salary is more than 50% of total income should complete Declaration Form 114(I), a simplified form for this specific case.
+7. Review the computed tax liability. If tax is payable, generate a payment reference (PSID) and pay via bank, ATM, or mobile banking (Alternate Delivery Channels).
+8. Submit. Successful submission is confirmed when both the Return of Income and Wealth Statement move from your Draft folder to Completed Task in Iris.
+9. Download your acknowledgement/completed return for your own records.
+
+### Change PIN for Iris
+The PIN can be changed by logging into Iris and clicking "Change Pin" near the top of the screen, then entering the required information in the dialog box.
+
+## INCOME TAX RETURN FORM
+
+FBR provides downloadable Individual Paper Return forms for each tax year, along with Simplified Return of Income forms for Retailers and Manufacturers, available on the FBR website's Income Tax Return Form page. Online filing through Iris is the standard, recommended method; paper forms are an alternative for those who specifically need them.
+
+## ACTIVE TAXPAYER LIST (ATL) — AND WHY IT MATTERS
+
+The Active Taxpayer List (ATL) is a central record of persons who filed their Income Tax Return by the applicable deadline for the relevant Tax Year.
+
+ATL Update Schedule:
+- Published every financial year on 1st March, valid until the last day of February of the following year (based on FBR's stated historical practice — recent years have also seen updates tied to July 1 based on the newly-due tax year's filers; confirm the exact current-year mechanics on FBR's live ATL page, since this has been adjusted in recent years).
+- The ATL is updated every Monday on the FBR website.
+
+### Advantages of Being an Active (ATL) Filer
+
+Being on the ATL is not just a compliance formality — it directly and materially reduces the withholding tax (WHT) rate applied to a person across many common financial transactions, including:
+- Bank profit/interest payments (filers are taxed at a materially lower withholding rate than non-filers on the same profit)
+- Property purchase and sale transactions (Sections 236C and 236K of the Income Tax Ordinance apply a lower WHT rate to filers than to non-filers)
+- Vehicle registration and token tax
+- Banking transactions generally, including cash withdrawals above certain thresholds
+
+Being off the ATL (a "non-filer") can also create practical friction beyond higher tax rates: increased likelihood of scrutiny/notices when FBR's data-matching systems (banking, withholding, digital invoicing data) flag a mismatch against what has been declared.
+
+(Note: exact current WHT percentage-point differentials for each transaction type are set out on FBR's separate Withholding Tax Rates page and are not included in this corpus at full precision — if a citizen asks for an exact rate on a specific transaction type, the accurate answer is to point them to FBR's live Withholding Tax Rates page rather than quote a number that may have changed.)
+
+## INCOME TAX DUE DATES
+
+| Person Type | Due Date |
+|---|---|
+| Individual & Association of Persons (AOP) | On or before 30th September |
+| Company | On or before 31st December |
+| Company with a Special Tax Year | On or before 30th September |
+
+Tax Year 2026 (income from 1 July 2025 to 30 June 2026) is due by 30 September 2026 for individuals and AOPs. FBR has in some past years extended this deadline close to or after the original date (e.g., Tax Year 2024's deadline was extended to 31 October 2024) — but an extension should never be assumed or relied upon; treat 30 September as the real deadline unless FBR publishes an official extension notice.
+
+## PENALTIES AND SURCHARGES FOR LATE FILING
+
+**Important — this section reflects a major, recent, and actively disputed change (Finance Act 2026). Treat this as current-but-contested rather than settled, and note the "last verified" date above.**
+
+Under Section 182 of the Income Tax Ordinance, 2001, late filing attracts a statutory daily penalty — historically described as the higher of 0.1% of tax payable per day, or a minimum amount per day of default, with the minimum penalty varying by taxpayer category (salaried individuals vs. business individuals/AOPs vs. companies carry different minimum penalty floors).
+
+Separately, and distinctly from the daily filing penalty, there is an **ATL Surcharge** under Section 182A — a one-time payment required to have one's name (re-)included on the Active Taxpayer List after missing the filing deadline. This is the figure that changed significantly in 2026:
+
+- **Previous ATL surcharge (pre-Finance Act 2026):** Rs. 1,000 for individuals, Rs. 10,000 for AOPs, Rs. 20,000 for companies.
+- **New ATL surcharge (per Finance Act 2026, as currently being implemented by FBR/PRAL through the Iris portal):** Rs. 25,000 for individuals (a roughly 24x/2,400% increase) — reported consistently by ProPakistani (a credible, established Pakistani business/tech news outlet), including a follow-up report that the Pakistan Tax Bar Association (PTBA) has formally written to the FBR Chairman objecting to this surcharge being applied retroactively to Tax Year 2025 returns, arguing it should only apply prospectively from Tax Year 2026. As of early July 2026, this dispute is unresolved. Secondary sources also report the AOP and company surcharges increased to Rs. 50,000 and Rs. 100,000 respectively, though this specific pairing is less strongly corroborated than the Rs. 25,000 individual figure and should be treated with slightly lower confidence.
+
+**System behavior for this topic:** state the Rs. 25,000 individual figure as the currently-reported and currently-being-implemented amount, but explicitly note that its legal/retrospective application is actively disputed by the tax bar association as of the last-verified date, and recommend the citizen confirm the live figure on FBR's Iris portal or with a tax professional before relying on it for a financial decision. This is a case where precision about *uncertainty* is more honest and more useful than false confidence in a single number.
+
+## PAY INCOME TAX
+
+To pay Income Tax dues, log into the "efile" system (e.fbr.gov.pk) using the same credentials used for Iris, then use the e-Payments tab to generate a Computerized Payment Receipt (CPR) or pay via Alternate Delivery Channels (ADC — ATM, internet banking, mobile banking).
+
+Failure to pay tax payable by the due date attracts a penalty or default surcharge, or both, under the Ordinance. Failure to pay is also an offence punishable, on conviction, by a fine or imprisonment not exceeding one year, or both (per FBR's own published guidance on payment obligations).
+
+## INCOME TAX REFUND
+
+A refund can only be claimed if the return was filed electronically — a manual (paper) return does not entitle a person to a refund.
+
+The refund amount should be clearly reflected within the Iris return. A refund is claimed by filing a separate application in Iris; status can be checked at the taxpayer's relevant Regional Tax Office (RTO).
+
+A refund can be claimed within two years from the date of filing (date of assessment) or from the date the tax was paid, whichever is later.
+
+Persons who file after the due date are not entitled to a refund for the period they were excluded from the ATL, and FBR incurs no liability for delayed refund compensation during that excluded period; that period does not count toward the computation of any additional payment for delayed refund.
+
+## WHEN TO CONSULT A TAX PROFESSIONAL RATHER THAN SELF-FILE
+
+Self-filing via Iris is realistically manageable for straightforward situations: salaried income only, simple bank profit, one property, no missed prior years. Consider engaging a tax professional (rather than filing solo) when any of the following apply:
+
+- **Multiple income sources** — business income combined with salary, freelance/gig income, rental income, and capital gains together, since these interact in ways that affect wealth reconciliation and can trigger review if inconsistent.
+- **Wealth reconciliation doesn't balance** — if your declared assets don't move by an amount consistent with declared income minus expenses, Iris will block submission; diagnosing why often requires a professional's help rather than trial-and-error guessing.
+- **Missed filing for multiple prior years** — filing several back years at once, especially with asset changes across that period, is a leading cause of FBR audit notices if done incorrectly; professional guidance is strongly advisable here rather than self-filing all years at once.
+- **You've received an FBR notice** (e.g., a Section 114A/161 notice regarding a data mismatch or under-declared withholding) — this is not a self-filing situation; professional representation is advisable.
+- **Foreign income or foreign assets** are involved, given the added complexity of Pakistan-source vs. foreign-source income rules.
+- **You're incorporating or already run a business/AOP** with its own filing obligations distinct from personal filing.
+- **You're unsure whether you owe advance tax** (quarterly installments under Section 147), which typically applies to business owners and freelancers rather than salaried employees whose tax is withheld by an employer.
+
+For a simple, single-income-source, no-missed-years situation, self-filing through Iris is designed to be completed without professional help, and FBR provides video tutorials and a written Knowledge Base (help.fbr.gov.pk) specifically to support self-filing.

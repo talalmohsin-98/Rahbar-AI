@@ -1,0 +1,94 @@
+SOURCE: https://dgip.gov.pk/ (passport, process, ordinary-passport, faq sections)
+DEPARTMENT: DGIP (Directorate General of Immigration & Passports, Ministry of Interior)
+LAST VERIFIED: 2026-07-04
+
+## OVERVIEW
+
+Every citizen of Pakistan is entitled to a Machine Readable Passport (MRP) for traveling abroad, subject to completion of all codal (legal/procedural) formalities. Under the revised Passport Rule 6, 2021: every citizen may apply for passport services from any Passport Office irrespective of the address recorded on their CNIC/NICOP/CRC — applicants are not restricted to a specific regional office based on their registered address.
+
+Passport types: Ordinary Passport (Machine Readable Passport / MRP — the standard passport most citizens use), e-Passport (biometric passport, launched 2022, with an embedded chip), Official Passport (for government officials), Diplomatic Passport, and Emergency Travel Document (ETD, issued by a Pakistani Mission abroad for citizens who need to urgently return to Pakistan without their passport).
+
+## GENERAL REQUIREMENTS
+
+MRP applications are processed using data from NADRA's system — a valid CNIC, NICOP, Smart National ID Card, or CRC is required before an MRP application can be processed. If an applicant does not have a valid one of these documents, they must obtain it from NADRA first.
+
+Documents commonly required (adults):
+- Original valid CNIC (or NICOP/Smart NIC for the applicable category)
+- Married female applicants must have their husband's name reflected on their CNIC/NICOP/Smart NIC — otherwise the ID must be modified first, before applying for the MRP
+- Government employees require an original No Objection Certificate (NOC) issued within the last 90 days by their Ministry/Division/Department
+- Dual nationals applying for their first-ever Pakistani passport are subject to agency verification
+
+Documents commonly required (minors, under 18):
+- Both parents' original CNICs/NICOPs and passports (or the legal guardian's, with a court-issued guardianship certificate if applicable)
+- Detailed birth certificate showing both parents' names
+- If parents are separated/divorced, court orders confirming legal custody
+
+Passport page and validity options: MRPs are available in 36, 72, or 100 pages, with 5-year or 10-year validity. Additional pages beyond 36 attract an extra fee (see fee section). Children under 15 are not eligible for 10-year validity and must be issued the 5-year validity passport.
+
+## APPLICATION PROCESS (AT A REGIONAL PASSPORT OFFICE / NADRA MEGA CENTRE)
+
+1. **Token acquisition** — arrive and obtain a token; documents are checked at the MRP counter.
+2. **Fee payment** — if documents are complete, a bank voucher/PSID is issued for fee payment (can also be paid in advance online via the Passport Fee Asaan app or web portal).
+3. **Biometric capture** — digital photograph and fingerprint capture (right thumb, right index, left thumb, left index) once the applicant's token is called.
+4. **Data entry** — operator enters application data; a printed Data Entry Form is presented to the applicant for verification and signature.
+5. **Clearance check** — verification against the Exit Control List (ECL) and Black List (BL); if a person is on either list, processing stops until removal from the list per applicable rules.
+6. **Interview/decision** — the Assistant Director/Officer-in-Charge interviews the applicant to confirm national status and credibility, and either approves ("Go ahead") or requests additional documents or a security-agency verification referral.
+7. **Production and dispatch** — once approved, the passport is produced and dispatched; the applicant is notified via SMS (inland, via service 9988) or email (overseas, via Email Rabta service).
+8. **Collection** — applicants must collect their passport in person (one family member may collect for the whole family). Passports not collected within a month of the notified collection date are destroyed per policy.
+9. **Post-collection requirement** — each holder must sign or provide a thumb impression on page 2 of the passport immediately after collection (for minors: right thumb for female, left thumb for male).
+
+## ONLINE APPLICATION (INLAND RENEWAL / OVERSEAS PAKISTANIS)
+
+Available via the e-Services Portal (onlinemrp.dgip.gov.pk), for users registered on the Pak-Identity system.
+- **Inland online applicants** can currently apply for **renewal only**; the renewed passport is delivered to their selected Passport Office (not home delivery, for inland applicants).
+- **Overseas online applicants** have broader access: Renewal, New (for newborns up to 2 years of age only), Reprint (Damaged), Reprint (Lost — limited to 1st and 2nd loss only; a 3rd loss requires an in-person visit to the Foreign Mission), and Modification (marital status, name, or profession change for female or male applicants).
+- Biometric verification for online applicants can now be completed via the NADRA PakID mobile app at the fingerprint-upload stage, replacing manual fingerprint capture in many cases.
+- Applications may require re-submission of fingerprint forms up to 3 times if rejected for quality reasons; after 3 consecutive rejections, the online system withholds issuance and the applicant must visit their nearest RPO/Foreign Mission instead.
+- Online passport fee, once paid, is **non-refundable and non-transferable** to another person.
+- Applicants can convert an existing Normal-category online application to Urgent by paying the fee difference, before the application is finalized.
+
+## FEES — CONFIRMED FROM OFFICIAL DGIP FAQ (dgip.gov.pk/faq/faq.php)
+
+| Service | 36-Page Fee | Processing Time |
+|---|---|---|
+| Normal Passport | Rs. 4,500 | 21 working days |
+| Urgent Passport | Rs. 7,500 | 5 working days |
+| Fast Track (Executive Passport Offices) | — (see note below) | 2 working days |
+
+The above 36-page figures are directly confirmed via DGIP's own FAQ page. Fast Track / Executive Passport Office service is available at designated offices in major cities (e.g., Islamabad, Lahore, Karachi) for the fastest turnaround, but this corpus does not have an official-source-confirmed Fast Track fee figure for 36 pages specifically.
+
+### Extended fee table (72/100 pages, 5/10-year validity) — SECONDARY SOURCE, CROSS-CORROBORATED
+
+The following figures are not confirmed directly from an official DGIP fee-table page (which renders as an image/table not extracted as text by this corpus), but are consistent across multiple independent, mutually-agreeing secondary sources:
+
+| Passport Type | Normal | Urgent |
+|---|---|---|
+| 36 pages, 5-year | Rs. 4,500 (official, confirmed above) | Rs. 7,500 (official, confirmed above) |
+| 72 pages, 5-year | ~Rs. 8,500–9,000 (secondary) | Rs. 13,500 (secondary, well-corroborated) |
+| 100 pages, 5-year | ~Rs. 11,000 (secondary) | Rs. 18,000 (secondary, well-corroborated) |
+| 36 pages, 10-year | ~Rs. 5,400 (secondary) | Rs. 11,200 (secondary, well-corroborated) |
+| 72 pages, 10-year | ~Rs. 10,000 (secondary) | Rs. 20,200 (secondary, well-corroborated) |
+| 100 pages, 10-year | ~Rs. 15,000 (secondary) | Rs. 27,000 (secondary, well-corroborated) |
+
+e-Passport (biometric) typically costs Rs. 1,000–2,000 more than the equivalent MRP fee, per secondary sources; not confirmed against an official DGIP e-Passport-specific fee page in this corpus.
+
+**System behavior:** for the 36-page Normal/Urgent figures, answer with full confidence — these are directly official. For all other page/validity/e-Passport combinations, present the figure as commonly-reported and cross-corroborated but not independently confirmed from an official fee table in this corpus, and recommend the citizen verify the exact current amount via the Passport Fee Asaan app or at the passport office before paying, since passport fees have been revised more than once in recent years (official notices referenced revisions effective 07-03-2024 and 08-05-2024).
+
+## LOST OR DAMAGED PASSPORT
+
+- **Lost passport:** a police report must be lodged with the concerned police station first; a lost-passport MRP application will only be delivered after verification of the previous MRP/manual passport from the original issuing authority, which the DGIP's own site notes "may take a month or longer."
+- **Damaged passport:** replacement is issued subject to the prescribed fee and production of required documents (including the damaged passport itself).
+- **Pages exhausted:** frequent travelers whose passport pages are full may apply for a fresh passport with a higher page count (72 or 100 pages), subject to the applicable extra fee.
+
+## NAME / DATE OF BIRTH / PHOTOGRAPH CHANGES (Confirmed via official DGIP FAQ)
+
+- **Name change:** submit the revised original CNIC reflecting the updated name — the passport is updated to match the CNIC, not the other way around.
+- **Date of birth change:** submit the revised original CNIC reflecting the updated DOB; a birth certificate or matriculation certificate may additionally be requested for verification.
+- **Photograph update:** requires issuance of an entirely new passport, per policy — cannot be updated on the existing booklet.
+- **Name/DOB changes altogether (multiple changes at once):** forwarded by the Regional Passport Office/Foreign Mission to DGIP Headquarters, Islamabad for approval — this is a slower process than a single, isolated change.
+
+## CHILDREN'S PASSPORTS
+
+- Payment for a child's passport fee uses the child's own 13-digit registration number (from B-Form/FRC or Smart CNIC/NICOP), not the parent's.
+- Children under 15 are not entitled to 10-year validity and must be charged/issued the 5-year validity fee.
+- A newborn's passport (Type "New," online, overseas applicants only) can be processed only up to 2 years of age; beyond that, an in-person visit to the Foreign Mission with supporting documents is required.
