@@ -4,7 +4,8 @@ langgraph
 langchain 
 langchain-groq
 langchain-core
-langchain-classic 
+langchain-classic
+groq 
 psycopg2-binary 
 pgvector 
 pypdf 
@@ -12,3 +13,5 @@ beautifulsoup4
 python-dotenv 
 mcp
 sentence-transformers
+rank-bm25
+numpy

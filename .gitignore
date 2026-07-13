@@ -1,7 +1,22 @@
-rahbar_ai/
-venv/
+# Environment variables
 .env
+*.env
+
+# Python
 __pycache__/
 *.pyc
+rahbar_ai/
+venv/
+.venv/
+
+# Node
 node_modules/
+
+# Build
 dist/
+build/
+
+# Local files
+*.log
+
+backend/bm25_index.pkl
