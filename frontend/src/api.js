@@ -35,7 +35,9 @@ export const api = {
   ingestion:     () => req('/about/ingestion'),
   health:        () => req('/health'),
 
-  // Document Q&A — upload your own file, ask questions about just that file
+  // Document Q&A — upload your own file, ask questions about just that file.
+  // Only reachable when FEATURES.documentQA is enabled in config.js; the backend
+  // /documents/* endpoints stay live either way.
   uploadDocument: (file) => uploadDocument(file),
   askDocument:    (docId, question) =>
                     req(`/documents/${docId}/ask`, { method: 'POST', body: JSON.stringify({ question }) }),

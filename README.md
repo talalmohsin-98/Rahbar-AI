@@ -16,6 +16,7 @@ A RAG-powered assistant that answers questions about Pakistani government servic
 
 ## Table of contents
 
+- [Scope](#scope)
 - [Screenshots](#screenshots)
 - [What makes this different](#what-makes-this-different)
 - [Architecture](#architecture)
@@ -28,6 +29,33 @@ A RAG-powered assistant that answers questions about Pakistani government servic
 - [Roadmap](#roadmap)
 
 ---
+
+## Scope
+
+Rahbar AI does exactly one thing: **help a Pakistani citizen carry out a government
+procedure**, across five service domains.
+
+| Domain | Covers |
+|---|---|
+| **NADRA / CNIC** | Identity card registration, renewal, correction, replacement, B-Form |
+| **FBR** | NTN registration, annual income tax returns, ATL status, refunds via IRIS |
+| **Driving License** | New applications, renewals, and international permits, by province |
+| **SECP** | Company name reservation, incorporation, annual filings |
+| **Passport (DGIP)** | New passports, renewals, urgent/executive categories, fees |
+
+Anything else is deliberately out of scope. In particular, **there is no
+"upload your own document and chat with it" surface** — that is a different
+product from guiding a citizen through an official procedure, and answering
+questions about a user's private file adds a data-handling burden this project
+has no reason to take on. The corpus is fixed, public, and curated: the five
+official-documentation files in [`data/`](data/).
+
+> The upload-your-own-file code still exists in the repo (`backend/document_qa.py`,
+> the `/documents/*` endpoints, `frontend/src/pages/DocumentQA.jsx`) but is
+> **switched off at the UI layer** behind `FEATURES.documentQA` in
+> [`frontend/src/config.js`](frontend/src/config.js). No nav entry, no footer
+> link, no route — `/documents` redirects home. The flag is the single place to
+> flip if that scope decision is ever revisited.
 
 ## Screenshots
 
@@ -54,14 +82,6 @@ Images live in [`data/images/`](data/images/) — see that folder's README for e
 See every stage of the RAG pipeline (intent, rewritten queries, retrieval, reranking, verification) for the answer above.
 
 <img src="data/images/assistant-pipeline.png" alt="Pipeline inspector panel" width="100%">
-
-### Document Q&A — upload
-
-<img src="data/images/document-qa-upload.png" alt="Document upload screen" width="100%">
-
-### Document Q&A — answering from an uploaded file
-
-<img src="data/images/document-qa-chat.png" alt="Document Q&A chat" width="100%">
 
 ### About — methodology & tech stack
 
@@ -156,7 +176,7 @@ Rahbar AI - Citizen Services Assistant/
 │   ├── hallucination_eval.py   Whole-answer grounding check
 │   ├── mcp_tools.py            Simulated gov-service tool functions
 │   ├── mcp_server.py           Standalone MCP server (SSE, port 8001)
-│   ├── document_qa.py          Upload-your-own-document Q&A (in-memory)
+│   ├── document_qa.py          Upload-your-own-document Q&A (in-memory) — backend only, no UI (see Scope)
 │   ├── ingest.py               One-time corpus chunk+embed+ingest script
 │   ├── test_db.py              pgvector connectivity check
 │   ├── test_pipeline.py        Legacy mock-based smoke test
@@ -164,9 +184,11 @@ Rahbar AI - Citizen Services Assistant/
 │   └── tests/                  pytest regression suite (stubs all external deps)
 ├── frontend/
 │   └── src/
-│       ├── pages/              Landing, Services, Recommend, Assistant, DocumentQA, About
+│       ├── pages/              Landing, Services, Recommend, Assistant, About
+│       │                       (+ DocumentQA — present but unrouted, see Scope)
 │       ├── components/         Nav, Footer, PipelinePanel, CitationChip, ServiceCard, Disclaimer
 │       ├── lib/                Answer formatting / citation stripping
+│       ├── config.js           Feature flags (documentQA: false)
 │       └── api.js              Backend fetch wrapper
 ├── data/
 │   ├── NADRA.txt, FBR.txt, Passport.txt, SECP.txt, DrivingLicense.txt   (source corpus)
@@ -246,9 +268,11 @@ Full command reference — including every command already used to build this pr
 | `GET` | `/services/{service_id}` | Single service detail |
 | `GET` | `/about/ingestion` | Corpus ingestion stats (doc/chunk counts, embedding model) |
 | `POST` | `/chat` | Run the full pipeline: `{ question, history }` → full pipeline state (answer, citations, verification, pipeline trace) |
-| `POST` | `/documents/upload` | Upload a `.pdf`/`.txt`/`.md` file (multipart) → `doc_id` |
-| `GET` | `/documents/{doc_id}` | Uploaded document metadata |
-| `POST` | `/documents/{doc_id}/ask` | Ask a question scoped to one uploaded document |
+
+The FastAPI app also still serves `POST /documents/upload`, `GET /documents/{doc_id}`
+and `POST /documents/{doc_id}/ask` from `document_qa.py`. **No part of the UI calls
+them** — they are out of scope (see [Scope](#scope)) and reachable only by hitting
+the API directly.
 
 ## Testing
 
@@ -264,7 +288,8 @@ python e2e_test.py          # full pipeline, mocked, covers all 6 routing paths 
 This is a portfolio/research project, and the README won't pretend otherwise:
 
 - **MCP tools are simulated.** `search_nadra`, `search_fbr`, etc. call Groq to generate *realistic-looking* structured responses — they do not hit real government APIs (which mostly don't expose public APIs). The tool-call *pattern* is real; the data behind it isn't.
-- **Uploaded documents are in-memory only** — lost on server restart, auto-evicted after 4 hours, and don't scale past a single process.
+- **The corpus is hand-curated and static.** Five official-documentation files, ingested once. Fees, forms, and procedures change; nothing here re-crawls or re-validates them, so an answer is only as current as the last ingest.
+- **The dormant document-Q&A endpoints are in-memory only** — lost on server restart, auto-evicted after 4 hours, and don't scale past a single process. They're left in the codebase rather than deleted, but they're not part of the product surface.
 - **No connection pooling** — each retrieval opens a fresh `psycopg2` connection. Fine at demo scale; would need `pgbouncer` in production.
 - **Citation regex has a known limitation** with abbreviations like "Rs." inside a sentence — documented and deliberately left as-is rather than papered over (see `tests/test_pipeline_fixes.py`).
 - **Citation/hallucination checks use a general-purpose cross-encoder**, not a dedicated NLI model (e.g. `facebook/bart-large-mnli`) — a reasonable scope tradeoff, called out explicitly in the code.
@@ -272,7 +297,7 @@ This is a portfolio/research project, and the README won't pretend otherwise:
 ## Roadmap
 
 - [ ] Wire real government data sources behind the MCP tool interfaces where public APIs exist
-- [ ] Move document Q&A storage to a per-session pgvector table with TTL cleanup
+- [ ] Widen the corpus within the five domains (provincial variations, updated fee schedules)
 - [ ] Add connection pooling (pgbouncer) for the retrieval path
 - [ ] Multi-turn conversational memory (currently stateless per request)
 - [ ] Swap the cross-encoder citation check for a dedicated NLI model

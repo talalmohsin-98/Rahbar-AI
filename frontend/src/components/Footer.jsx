@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FEATURES } from '../config';
 
 export default function Footer() {
   return (
@@ -29,7 +30,9 @@ export default function Footer() {
               Pages
             </div>
             {[['/', 'Home'], ['/services', 'Services'], ['/recommend', 'Get Help'],
-              ['/assistant', 'Assistant'], ['/documents', 'Your Docs'], ['/about', 'About']].map(([to, label]) => (
+              ['/assistant', 'Assistant'],
+              ...(FEATURES.documentQA ? [['/documents', 'Your Docs']] : []),
+              ['/about', 'About']].map(([to, label]) => (
               <Link key={to} to={to} style={{
                 display: 'block', color: 'var(--slate-light)', fontSize: 14,
                 marginBottom: 8, textDecoration: 'none',
