@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { FEATURES } from '../config';
 
+// `feature` entries are dropped unless their flag is on in config.js — they keep
+// their position in the order, so re-enabling one puts it back where it belongs.
 const links = [
   { to: '/',          label: 'Home'       },
   { to: '/services',  label: 'Services'   },
   { to: '/recommend', label: 'Get Help'   },
   { to: '/assistant', label: 'Assistant'  },
-  { to: '/documents', label: 'Your Docs'  },
+  { to: '/documents', label: 'Your Docs', feature: 'documentQA' },
   { to: '/about',     label: 'About'      },
-];
+].filter(l => !l.feature || FEATURES[l.feature]);
 
 export default function Nav() {
   const [open, setOpen] = useState(false);

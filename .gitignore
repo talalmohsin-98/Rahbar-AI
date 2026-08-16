@@ -1,6 +1,8 @@
 # Environment variables
 .env
 *.env
+# the bare-named root file — `.env` and `*.env` above do NOT match it
+/env
 
 # Python
 __pycache__/
