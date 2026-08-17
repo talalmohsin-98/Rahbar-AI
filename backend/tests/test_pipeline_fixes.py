@@ -17,6 +17,7 @@ import reranker
 import compressor
 import generator
 import citation_verifier
+import completeness_check
 import hallucination_eval
 import bm25_retrieval
 import hybrid_search
@@ -132,7 +133,7 @@ def test_generate_out_of_scope_uses_small_model_and_returns_answer():
     FAKE_GROQ_RESPONSES.append("I can help with government services, but not with that.")
     result = generator.generate("Tell me a joke", chunks=[], intent="out_of_scope")
 
-    assert result["model"] == "llama-3.1-8b-instant"
+    assert result["model"] == generator.FAST_MODEL
     assert result["context_used"] == 0
     assert "government services" in result["answer"]
 
@@ -151,15 +152,12 @@ def test_generate_factual_with_none_content_or_none_source_chunk_does_not_crash(
 # ---------------------------------------------------------------------------
 def test_parse_citations_extracts_claim_source_pairs():
     """
-    NOTE: parse_citations() splits on ANY '.', '!', or '?' followed by
-    optional whitespace and a '[source:' tag — it has no abbreviation
-    handling (unlike compressor.split_sentences, which has a capital-letter
-    lookahead). So a period inside "Rs." is treated as a sentence boundary:
-    the regex backtracks past it and the captured claim starts *after* that
-    stray period, not from the true sentence start. This is a known,
-    pre-existing parser limitation (not something this test suite changes)
-    — asserting the actual behavior here so a future fix is a deliberate,
-    visible change instead of a silent regression.
+    NOTE: parse_citations() no longer delimits claims by sentence punctuation
+    — it takes the text from the previous tag (or the start of the line) up to
+    each [source: ...] tag. That was changed deliberately to make bulleted
+    answers verifiable, and it also removed the old "Rs." backtracking bug
+    this test used to document. See
+    test_parse_citations_keeps_full_sentence_through_an_abbreviation.
     """
     answer = (
         "NADRA charges Rs. 750 for a new CNIC. [source: nadra_guide.pdf] "
@@ -315,3 +313,400 @@ def test_document_qa_rejects_unsupported_file_type():
 def test_document_qa_rejects_empty_pdf_text():
     with pytest.raises(ValueError):
         document_qa.extract_text("empty.txt", b"   \n\n  ")
+
+
+# ---------------------------------------------------------------------------
+# 11. The "verified-looking bad answer" bug
+# ---------------------------------------------------------------------------
+# Reported from the UI: asking "What documents do I need to renew my CNIC?"
+# returned the single bullet "- CNIC number" under a green "✓ Citations
+# verified" badge and "Hal rate: 0%". Neither check had actually run — both
+# stages silently no-op'd on list-formatted answers, which is the format
+# generator.py mandates. These tests pin the failing shape directly.
+
+LIST_ANSWER = (
+    "To renew your CNIC you need to provide:\n"
+    "- CNIC number [source: NADRA.txt]\n"
+    "- Original expired CNIC [source: NADRA.txt]"
+)
+
+
+def test_parse_citations_reads_bullet_claims_without_terminal_punctuation():
+    """The old sentence regex required '.'/'!'/'?' before the tag, so a
+    bulleted answer parsed to ZERO citations."""
+    claims = citation_verifier.parse_citations(LIST_ANSWER)
+
+    assert len(claims) == 2
+    assert claims[0]["claim"] == "CNIC number"          # list marker stripped
+    assert claims[1]["claim"] == "Original expired CNIC"
+    assert all(c["source"] == "NADRA.txt" for c in claims)
+
+
+def test_parse_citations_claim_does_not_absorb_the_lead_in_line():
+    claims = citation_verifier.parse_citations(LIST_ANSWER)
+    assert "To renew your CNIC" not in claims[0]["claim"]
+
+
+def test_parse_citations_keeps_full_sentence_through_an_abbreviation():
+    """Regression on the old regex's 'Rs.' backtracking: the claim used to
+    start mid-sentence, right after the abbreviation's period."""
+    answer = "NADRA charges Rs. 750 for a new CNIC. [source: nadra.pdf]"
+    claims = citation_verifier.parse_citations(answer)
+
+    assert len(claims) == 1
+    assert claims[0]["claim"].startswith("NADRA charges")
+
+
+def test_uncited_answer_is_reported_unverifiable_not_verified():
+    """An answer with no parseable citations must NOT come back passed=True —
+    that is what let the UI paint a green 'citations verified' badge on an
+    answer where nothing was checked."""
+    chunks = [{"chunk_id": 1, "content": "CNIC renewal requires a CNIC number.",
+               "source": "NADRA.txt"}]
+
+    result = citation_verifier.verify_citations("Just some text, no tags.", chunks)
+
+    assert result["status"] == "unverifiable"
+    assert result["passed"] is False
+    assert result["verification_rate"] is None
+
+
+def test_verify_citations_with_no_chunks_is_not_applicable():
+    """The out_of_scope path has no context to verify against — that is not a
+    citation failure and must not trigger a regeneration."""
+    result = citation_verifier.verify_citations("I can only help with X.", [])
+
+    assert result["status"] == "not_applicable"
+    assert result["passed"] is True
+
+
+def test_verified_result_reports_status_and_count():
+    answer = "NADRA charges Rs. 750 for a CNIC. [source: nadra.pdf]"
+    chunks = [{"chunk_id": 1, "content": "NADRA charges Rs. 750 for a CNIC.",
+               "source": "nadra.pdf"}]
+
+    result = citation_verifier.verify_citations(answer, chunks)
+
+    assert result["status"] == "verified"
+    assert result["checked_count"] == 1
+
+
+def test_claim_is_checked_against_every_chunk_of_the_cited_source():
+    """
+    A citation names a DOCUMENT, and one document contributes several chunks.
+    Scoring only against the first/highest-ranked chunk of that document
+    flagged claims the same document plainly supports one chunk over.
+    """
+    chunks = [
+        {"chunk_id": 1, "source": "NADRA.txt",
+         "content": "Eligibility falls under Rule 12 of the 2002 statute."},
+        {"chunk_id": 2, "source": "NADRA.txt",
+         "content": "Smart NIC Renewal costs Rs. 750 in the normal category."},
+    ]
+    answer = "Smart NIC Renewal costs Rs. 750 in the normal category [source: NADRA.txt]"
+
+    result = citation_verifier.verify_citations(answer, chunks)
+
+    assert result["passed"] is True
+    assert result["status"] == "verified"
+
+
+def test_split_claims_treats_each_bullet_as_its_own_claim():
+    """compressor.split_sentences() collapsed this whole answer into ONE unit
+    (bullets carry no terminal punctuation and 'CNIC number' is under the old
+    15-char floor), which is how a 1-item sample produced 'Hal rate: 0%'."""
+    claims = hallucination_eval.split_claims(
+        "To renew your CNIC you need to provide:\n- CNIC number\n- Original expired CNIC"
+    )
+
+    assert claims == ["CNIC number", "Original expired CNIC"]   # lead-in dropped
+
+
+def test_hallucination_eval_scores_each_bullet_separately():
+    chunks = [{"chunk_id": 1, "content": "CNIC renewal requires your CNIC number.",
+               "source": "NADRA.txt"}]
+    answer = "You need:\n- CNIC number\n- Zebra quokka bicycle telescope pyramid volcano"
+
+    result = hallucination_eval.evaluate_hallucination(answer, chunks)
+
+    assert result["evaluated_count"] == 2
+    assert result["status"] == "evaluated"
+    assert result["hallucinated_count"] >= 1
+
+
+def test_hallucination_rate_is_none_when_nothing_could_be_evaluated():
+    """Must not report 0.0 — 'no claim was checked' is not 'no hallucination'."""
+    result = hallucination_eval.evaluate_hallucination("Requirements:", [])
+
+    assert result["hallucination_rate"] is None
+    assert result["status"] == "not_evaluated"
+    assert result["evaluated_count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# 12. compressor.py — structured chunks must not lose list items
+# ---------------------------------------------------------------------------
+NADRA_RENEWAL_CHUNK = (
+    "## CNIC RENEWAL\n"
+    "\n"
+    "Eligibility:\n"
+    "As per Rule 12 of NADRA (NIC) Rules, 2002, a citizen shall at any time but not "
+    "later than one month after the date of expiry or early termination of validity "
+    "period, must apply for renewal of his/her card.\n"
+    "\n"
+    "Requirements:\n"
+    "- CNIC number\n"
+    "\n"
+    "Process of applying through NADRA Registration Centre:\n"
+    "1. Token Acquisition - Obtain a Queue Matic token upon arrival.\n"
+    "2. Biometric Capture - Digital capture of live photograph and fingerprints.\n"
+    "3. OIC Interview / Approval - A brief interview conducted by the Officer-In-Charge.\n"
+    "4. Payment - Submission of the required processing fee.\n"
+    "5. Card Printing - Card is printed.\n"
+)
+
+
+def test_compressor_keeps_numbered_procedure_intact():
+    """
+    Regression on the real failure: sentence-level compression kept process
+    steps 1, 4 and 5 of this chunk and deleted 2 and 3 — silently dropping
+    "Biometric Capture", the step that requires an in-person visit. A partial
+    procedure is worse than none: it looks complete.
+    """
+    model = reranker.get_cross_encoder()
+    chunk = {"chunk_id": 5, "content": NADRA_RENEWAL_CHUNK, "source": "NADRA.txt",
+             "rerank_score": 3.0, "rank": 1}
+
+    result = compressor.compress_chunk(
+        "What documents do I need to renew my CNIC?", chunk, model)
+
+    content = result["content"]
+    kept_steps = [n for n in "12345" if f"\n{n}. " in "\n" + content]
+    assert kept_steps in ([], list("12345")), \
+        f"procedure was partially kept: steps {kept_steps}"
+    assert "Biometric Capture" in content
+
+
+def test_compressor_keeps_requirements_list_with_its_lead_in():
+    model = reranker.get_cross_encoder()
+    chunk = {"chunk_id": 5, "content": NADRA_RENEWAL_CHUNK, "source": "NADRA.txt",
+             "rerank_score": 3.0, "rank": 1}
+
+    result = compressor.compress_chunk(
+        "What documents do I need to renew my CNIC?", chunk, model)
+
+    assert "Requirements:" in result["content"]
+    assert "- CNIC number" in result["content"]
+    # The section heading must survive: without it the model cannot tell
+    # renewal rules apart from the new-registration rules in the same file.
+    assert "## CNIC RENEWAL" in result["content"]
+
+
+def test_compressor_leaves_prose_chunks_on_the_sentence_path():
+    """is_structured() must not hijack ordinary prose (no lists present)."""
+    prose = (
+        "NADRA was established in 2000 under the Ministry of Interior. "
+        "The authority issues CNICs to Pakistani citizens. "
+        "It also manages biometric records nationwide. "
+        "The weather in Islamabad is mild in spring. "
+        "Offices open at nine in the morning."
+    )
+    assert compressor.is_structured(prose) is False
+
+
+# ---------------------------------------------------------------------------
+# 12b. completeness_check.py — faithful but useless answers
+# ---------------------------------------------------------------------------
+COMPLETE_ANSWER = (
+    "- CNIC number [source: NADRA.txt]\n"
+    "At the centre:\n"
+    "- Obtain a Queue Matic token upon arrival [source: NADRA.txt]\n"
+    "- Biometric capture of live photograph and fingerprints [source: NADRA.txt]\n"
+    "- Brief interview with the Officer-In-Charge [source: NADRA.txt]\n"
+    "- Payment of the processing fee [source: NADRA.txt]\n"
+    "- Card printing [source: NADRA.txt]"
+)
+
+
+def test_completeness_flags_the_reported_one_bullet_answer():
+    """
+    "- CNIC number" is a verbatim, grounded, correctly-cited quote of NADRA's
+    Requirements line — it passes citation AND hallucination checks. It is
+    still useless: the same chunk lists the five centre steps, including the
+    biometric capture that forces an in-person visit.
+    """
+    chunks = [{"chunk_id": 5, "source": "NADRA.txt",
+               "content": NADRA_RENEWAL_CHUNK, "rank": 1}]
+
+    result = completeness_check.check_completeness(
+        "- CNIC number [source: NADRA.txt]", chunks)
+
+    assert result["passed"] is False
+    assert result["status"] == "thin"
+    assert any("Biometric Capture" in b["text"] for b in result["unused_blocks"])
+
+
+def test_completeness_passes_an_answer_that_used_the_context():
+    chunks = [{"chunk_id": 5, "source": "NADRA.txt",
+               "content": NADRA_RENEWAL_CHUNK, "rank": 1}]
+
+    result = completeness_check.check_completeness(COMPLETE_ANSWER, chunks)
+
+    assert result["passed"] is True
+    assert result["unused_blocks"] == []
+
+
+def test_completeness_does_not_flag_a_short_answer_with_nothing_more_to_say():
+    """No unused blocks in context => no retry, however short the answer."""
+    chunks = [{"chunk_id": 1, "source": "NADRA.txt", "rank": 1,
+               "content": "The CNIC renewal fee is Rs. 750 in the normal category."}]
+
+    result = completeness_check.check_completeness(
+        "- The renewal fee is Rs. 750 [source: NADRA.txt]", chunks)
+
+    assert result["passed"] is True
+
+
+def test_completeness_is_skipped_when_there_is_no_context():
+    result = completeness_check.check_completeness("Some answer.", [])
+    assert result["passed"] is True
+    assert result["status"] == "not_applicable"
+
+
+def test_retry_feedback_quotes_the_dropped_passage_verbatim():
+    """A generic 'be more complete' retry reproduced the same short answer in
+    testing — the omitted text has to be quoted back."""
+    blocks = [{"source": "NADRA.txt",
+               "text": "Process:\n1. Token Acquisition\n2. Biometric Capture"}]
+
+    feedback = completeness_check.build_retry_feedback(blocks)
+
+    assert "Biometric Capture" in feedback
+    assert "NADRA.txt" in feedback
+
+
+def test_generator_appends_retry_feedback_after_the_question():
+    """Placement matters: a revision instruction above the context reads as
+    background rather than as an instruction."""
+    messages = generator.build_messages(
+        "q", "some context", "factual", feedback="REVISE: add the steps.")
+
+    user = messages[1]["content"]
+    assert user.index("REVISE: add the steps.") > user.index("Question: q")
+
+
+# ---------------------------------------------------------------------------
+# 13. graph.py — the retry edge was unreachable
+# ---------------------------------------------------------------------------
+def test_route_after_verification_retries_once_then_stops():
+    """
+    generator_node used to increment retry_count on the FIRST generation, so
+    route_after_verification always saw retry_count=1 and `1 < MAX_RETRIES(1)`
+    was False — the retry edge could never be taken by any question.
+    """
+    import graph
+
+    failed = {"citation_result": {"passed": False},
+              "hallucination_result": {"passed": True}}
+
+    assert graph.route_after_verification({**failed, "retry_count": 0}) == "generator"
+    assert graph.route_after_verification({**failed, "retry_count": 1}) == "end"
+
+
+def test_incomplete_answer_triggers_a_retry():
+    """A thin answer passes citation and hallucination checks — completeness
+    is the only stage that can catch it, so it must reach the router."""
+    import graph
+
+    state = {"citation_result": {"passed": True},
+             "hallucination_result": {"passed": True},
+             "completeness_result": {"passed": False},
+             "retry_count": 0}
+
+    assert graph.route_after_verification(state) == "generator"
+
+
+def test_generator_node_passes_retry_feedback_only_on_a_retry():
+    import graph
+
+    FAKE_GROQ_RESPONSES.append("Short. [source: a.pdf]")
+    captured = {}
+    original = graph.generate
+
+    def spy(**kwargs):
+        captured.update(kwargs)
+        return original(**kwargs)
+
+    graph.generate = spy
+    try:
+        graph.generator_node({"question": "q", "intent": "factual",
+                              "compressed_chunks": [], "generation_attempts": 0,
+                              "retry_feedback": "ADD THE STEPS"})
+        assert captured["feedback"] is None       # first attempt: no feedback
+
+        FAKE_GROQ_RESPONSES.append("Longer. [source: a.pdf]")
+        graph.generator_node({"question": "q", "intent": "factual",
+                              "compressed_chunks": [], "generation_attempts": 1,
+                              "retry_feedback": "ADD THE STEPS"})
+        assert captured["feedback"] == "ADD THE STEPS"
+    finally:
+        graph.generate = original
+
+
+def test_route_after_verification_survives_null_results():
+    """verification_agent_node sets these to None when there is no answer;
+    state.get(k, {}) returns None, and None.get() would crash the router."""
+    import graph
+
+    state = {"citation_result": None, "hallucination_result": None, "retry_count": 0}
+    assert graph.route_after_verification(state) == "end"
+
+
+def test_generator_node_counts_attempts_and_retries_separately():
+    import graph
+
+    FAKE_GROQ_RESPONSES.append("An answer. [source: a.pdf]")
+    first = graph.generator_node({"question": "q", "intent": "factual",
+                                  "compressed_chunks": []})
+
+    assert first["retry_count"] == 0            # no retry has happened yet
+    assert first["generation_attempts"] == 1
+    assert first["generation_meta"]["is_retry"] is False
+
+    FAKE_GROQ_RESPONSES.append("A better answer. [source: a.pdf]")
+    second = graph.generator_node({"question": "q", "intent": "factual",
+                                   "compressed_chunks": [],
+                                   "generation_attempts": 1})
+
+    assert second["retry_count"] == 1
+    assert second["generation_attempts"] == 2
+    assert second["generation_meta"]["is_retry"] is True
+
+
+# ---------------------------------------------------------------------------
+# 14. reranker.py — relative noise floor
+# ---------------------------------------------------------------------------
+def test_reranker_drops_negative_chunks_when_enough_relevant_ones_exist(monkeypatch):
+    """Cross-domain noise (a driving-licence passage on a CNIC question) used
+    to reach the prompt because MIN_RERANK_SCORE is an always-return-something
+    floor of -5."""
+    chunks = [{"chunk_id": i, "content": f"c{i}", "source": "s"} for i in range(5)]
+    monkeypatch.setattr(reranker, "get_cross_encoder",
+                        lambda: type("M", (), {"predict": staticmethod(
+                            lambda pairs: np.array([3.0, 2.0, 1.0, -0.5, -3.0]))})())
+
+    results = reranker.rerank("q", chunks, top_n=10)
+
+    assert [c["chunk_id"] for c in results] == [0, 1, 2]
+
+
+def test_reranker_keeps_weak_chunks_when_nothing_clears_the_floor(monkeypatch):
+    """The floor must never empty the context — a thin answer beats none."""
+    chunks = [{"chunk_id": i, "content": f"c{i}", "source": "s"} for i in range(3)]
+    monkeypatch.setattr(reranker, "get_cross_encoder",
+                        lambda: type("M", (), {"predict": staticmethod(
+                            lambda pairs: np.array([-0.2, -1.0, -2.0]))})())
+
+    results = reranker.rerank("q", chunks, top_n=10)
+
+    assert len(results) == 3

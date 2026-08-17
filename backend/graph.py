@@ -50,6 +50,7 @@ from hybrid_search      import hybrid_search
 from reranker           import rerank
 from compressor         import compress
 from citation_verifier  import verify_citations
+from completeness_check import check_completeness, build_retry_feedback
 from generator          import generate
 from hallucination_eval import evaluate_hallucination
 from mcp_tools          import call_tool, select_tools_for_question
@@ -94,6 +95,9 @@ class PipelineState(TypedDict, total=False):
     generation_meta:      dict
     citation_result:      dict
     hallucination_result: dict
+    completeness_result:  dict
+    retry_feedback:       str
+    generation_attempts:  int
     retry_count:          int
     final_answer:         str
     error:                str
@@ -115,6 +119,9 @@ def initial_state(question: str) -> dict:
         "generation_meta":      None,
         "citation_result":      None,
         "hallucination_result": None,
+        "completeness_result":  None,
+        "retry_feedback":       None,
+        "generation_attempts":  0,
         "retry_count":          0,
         "final_answer":         None,
         "error":                None,
@@ -270,11 +277,25 @@ def generator_node(state: PipelineState) -> dict:
     intent   = state["intent"]
     chunks   = state.get("compressed_chunks", [])
 
-    retry_count = state.get("retry_count", 0)
-    is_retry    = retry_count > 0
+    # `attempts` counts generations already made; `retry_count` counts
+    # REGENERATIONS. They must be separate fields.
+    #
+    # The old code incremented retry_count on the very first generation, so
+    # by the time route_after_verification tested `retry_count < MAX_RETRIES`
+    # the count was already 1 and 1 < 1 is False — the retry edge could never
+    # be taken, for any question, ever. The retry path was dead code that the
+    # pipeline reported as available.
+    attempts = state.get("generation_attempts", 0)
+    is_retry = attempts > 0
 
     if is_retry:
-        print(f"[Generator] RETRY attempt {retry_count} — using stricter temperature")
+        print(f"[Generator] RETRY attempt {attempts} — using stricter temperature")
+
+    # Set by verification_agent_node when it can say exactly what the previous
+    # attempt got wrong. A retry without it just re-rolls the same dice.
+    feedback = state.get("retry_feedback") if is_retry else None
+    if feedback:
+        print("[Generator] Retry carries revision feedback from verification")
 
     print(f"[Generator] Calling Groq ({intent} format, {len(chunks)} chunks)...")
 
@@ -284,18 +305,22 @@ def generator_node(state: PipelineState) -> dict:
         intent=intent,
         # On retry: lower temperature = more conservative, less hallucination
         temperature=0.0 if is_retry else 0.1,
+        feedback=feedback,
     )
 
     print(f"[Generator] {result['prompt_tokens']} prompt + {result['completion_tokens']} completion tokens")
 
     return {
-        "answer":          result["answer"],
-        "retry_count":     retry_count + 1,
+        "answer":             result["answer"],
+        "generation_attempts": attempts + 1,
+        "retry_count":        attempts,   # 0 after the first generation
         "generation_meta": {
             "model":              result["model"],
             "prompt_tokens":      result["prompt_tokens"],
             "completion_tokens":  result["completion_tokens"],
             "context_used":       result["context_used"],
+            "finish_reason":      result.get("finish_reason"),
+            "truncated":          result.get("truncated", False),
             "is_retry":           is_retry,
         },
     }
@@ -316,7 +341,8 @@ def verification_agent_node(state: PipelineState) -> dict:
 
     if not answer:
         return {"final_answer": "No answer was generated.",
-                "citation_result": None, "hallucination_result": None}
+                "citation_result": None, "hallucination_result": None,
+                "completeness_result": None}
 
     # Step 1: Citation verification
     print("[VerificationAgent] Verifying citations...")
@@ -328,10 +354,22 @@ def verification_agent_node(state: PipelineState) -> dict:
     hallucination_result = evaluate_hallucination(answer, chunks)
     print(f"[VerificationAgent] Hallucination: {hallucination_result['summary']}")
 
-    # Day 7 will add: if not passed → retry with stricter prompt
+    # Step 3: Completeness — steps 1 and 2 only ask whether the answer is TRUE.
+    # This asks whether it is USEFUL: did we retrieve material that answers the
+    # question and then drop it? (See completeness_check.py.)
+    print("[VerificationAgent] Checking completeness...")
+    completeness_result = check_completeness(answer, chunks)
+    print(f"[VerificationAgent] Completeness: {completeness_result['summary']}")
+
     return {
         "citation_result":      citation_result,
         "hallucination_result": hallucination_result,
+        "completeness_result":  completeness_result,
+        # Quote the dropped passages back to the generator if we regenerate.
+        "retry_feedback": (
+            build_retry_feedback(completeness_result["unused_blocks"])
+            if completeness_result["unused_blocks"] else None
+        ),
         "final_answer":         answer,
     }
 
@@ -358,21 +396,23 @@ def route_after_verification(state: PipelineState) -> Literal["generator", "end"
     """
     Conditional edge: after verification_agent, decide whether to retry generation.
 
-    Retry if:
-        - Citation verification failed (unverified claims exist) AND
-        - Hallucination rate is above threshold AND
-        - We haven't already retried (MAX_RETRIES cap)
+    Retry if any verification stage failed — citations unverified, claims
+    ungrounded, or the answer left retrieved material unused — and we haven't
+    already retried (MAX_RETRIES cap).
 
     Why cap retries at 1?
         If the LLM hallucinated once, a second attempt usually fixes it
         because we pass a stricter prompt. A third attempt rarely adds value
         and doubles latency. One retry is the pragmatic sweet spot.
     """
-    citation_ok    = state.get("citation_result", {}).get("passed", True)
-    hallucination_ok = state.get("hallucination_result", {}).get("passed", True)
-    retry_count    = state.get("retry_count", 0)
+    # `or {}` — not just a default arg: verification_agent_node sets these keys
+    # to None when there was no answer to check, and None.get() would crash.
+    citation_ok      = (state.get("citation_result") or {}).get("passed", True)
+    hallucination_ok = (state.get("hallucination_result") or {}).get("passed", True)
+    complete_ok      = (state.get("completeness_result") or {}).get("passed", True)
+    retry_count      = state.get("retry_count", 0)
 
-    if (not citation_ok or not hallucination_ok) and retry_count < MAX_RETRIES:
+    if (not citation_ok or not hallucination_ok or not complete_ok) and retry_count < MAX_RETRIES:
         print(f"[Router] Verification failed — retrying generation (attempt {retry_count + 1})")
         return "generator"
 

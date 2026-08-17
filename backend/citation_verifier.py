@@ -51,45 +51,83 @@ from reranker import get_cross_encoder   # reuse loaded model
 # 1. CONSTANTS
 # ---------------------------------------------------------------------------
 # Minimum CrossEncoder score for a claim to be considered supported by its source.
-# We use a lower threshold than reranking (2.8) because entailment scoring
-# has a different distribution than passage reranking scoring.
-# This is a tunable parameter — calibrate on your domain.
-CITATION_MIN_SCORE = float(os.getenv("CITATION_MIN_SCORE", "1.5"))
+#
+# CALIBRATED ON THIS CORPUS (backend/, 60 sampled chunks — rerun before trusting
+# it on new data). Scoring a claim against the chunk it cites:
+#
+#   verbatim claims lifted from the chunk      min  +0.62   median +7.77
+#   LLM paraphrases of the chunk (6 observed)  min  -2.62   max    +6.36
+#   bullets from an unrelated document         max  -3.91
+#   invented requirements/fees                 max  -6.61
+#
+# The old 1.5 was calibrated for full-sentence claims. Once parse_citations()
+# started (correctly) reading short bullet claims, 1.5 rejected 4 of 6
+# genuinely-supported claims on the CNIC renewal answer — the verifier cried
+# wolf on a faithful answer. -3.0 keeps every observed true claim and still
+# rejects every observed fabrication.
+#
+# Note the margin between a paraphrase (-2.62) and an unrelated bullet (-3.91)
+# is thin: this is a relevance model doing entailment's job. A dedicated NLI
+# model (e.g. bart-large-mnli) would separate these far more cleanly and is the
+# right upgrade if false flags matter more than the extra model.
+CITATION_MIN_SCORE = float(os.getenv("CITATION_MIN_SCORE", "-3.0"))
 
 
 # ---------------------------------------------------------------------------
 # 2. CITATION PARSER
 # ---------------------------------------------------------------------------
+CITATION_TAG = re.compile(r'\[\s*source\s*:\s*([^\]]+)\]', re.IGNORECASE)
+
+# Leading list marker on a bullet or numbered line: "- ", "* ", "• ", "1. ", "2) "
+LIST_MARKER = re.compile(r'^\s*(?:[-*•]|\d+[.)])\s*')
+
+
 def parse_citations(answer: str) -> list[dict[str, str]]:
     """
     Extracts (claim, source) pairs from the LLM's answer.
 
-    We instruct the LLM (in generator.py, Day 6) to format citations like:
+    We instruct the LLM (in generator.py) to format citations like:
         "NADRA charges Rs. 750 for CNIC. [source: nadra_guide.pdf]"
-
-    This function finds those patterns and returns structured data.
 
     Returns:
         List of dicts: [{"claim": "...", "source": "nadra_guide.pdf"}, ...]
 
-    Why this format?
-        Square bracket citations are common in academic and document-style text.
-        They're easy to parse with regex without requiring complex NLP.
-        The LLM can be reliably instructed to produce them.
+    HOW A CLAIM IS DELIMITED — and why it is not sentence-based:
+        The old pattern was r'([^.!?]*[.!?])\\s*\\[source:...\\]' — it required
+        the claim to END in '.', '!' or '?' immediately before the tag. But
+        generator.py MANDATES list formatting for any answer that enumerates
+        documents, requirements, steps or fees, and list items don't carry
+        terminal punctuation:
+
+            - CNIC number [source: NADRA.txt]
+
+        So the regex matched nothing, verify_citations() reported "no citations
+        found", and — because that path returned passed=True — the UI showed a
+        green "citations verified" badge on an answer where NOTHING had been
+        checked. Every list answer (i.e. most of them) verified vacuously.
+
+        A claim now runs from the end of the previous citation tag (or the
+        start of the line, whichever is later) up to this tag. Anchoring on
+        the line break is what makes bullets work, and it also fixes the
+        "Rs. 750" backtracking bug the old sentence regex had — an
+        abbreviation's period no longer truncates the claim.
 
     Sentences WITHOUT a citation tag are not verified here — they're handled
     by hallucination_eval.py which checks the whole answer against all chunks.
     """
     cited_claims = []
+    cursor = 0
 
-    # Pattern: any text followed by [source: filename]
-    # The .*? is non-greedy — stops at the first [source: ...] it finds
-    pattern = r'([^.!?]*[.!?])\s*\[source:\s*([^\]]+)\]'
-    matches = re.finditer(pattern, answer, re.IGNORECASE)
+    for match in CITATION_TAG.finditer(answer):
+        segment = answer[cursor:match.start()]
+        cursor  = match.end()
 
-    for match in matches:
-        claim  = match.group(1).strip()
-        source = match.group(2).strip()
+        # A claim never spans a line break — keep only the last line of the
+        # segment so a bullet doesn't absorb the lead-in sentence above it.
+        claim = segment.rsplit("\n", 1)[-1]
+        claim = LIST_MARKER.sub("", claim).strip()
+
+        source = match.group(1).strip()
         if claim and source:
             cited_claims.append({"claim": claim, "source": source})
 
@@ -115,11 +153,27 @@ def find_source_chunk(
         If multiple chunks from the same source exist, returns the highest-ranked one
         (already sorted by rank from reranker.py).
     """
+    chunks_for_source = find_source_chunks(source_name, chunks)
+    return chunks_for_source[0] if chunks_for_source else None
+
+
+def find_source_chunks(
+    source_name: str,
+    chunks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    ALL chunks from the cited source, in rank order.
+
+    A citation names a document ("NADRA.txt"), not a passage — and one document
+    contributes several chunks to the context (renewal, modification, fees...).
+    Scoring a claim only against the highest-RANKED chunk of that document asks
+    the wrong question: "does the best-retrieved passage support this?" instead
+    of "does the cited document support this?". A renewal-fee claim cited to
+    NADRA.txt would be checked against the renewal chunk and flagged, even
+    though the fee table chunk — same document, same context — states it.
+    """
     source_lower = source_name.lower()
-    for chunk in chunks:
-        if source_lower in (chunk.get("source") or "").lower():
-            return chunk
-    return None
+    return [c for c in chunks if source_lower in (c.get("source") or "").lower()]
 
 
 # ---------------------------------------------------------------------------
@@ -127,11 +181,11 @@ def find_source_chunk(
 # ---------------------------------------------------------------------------
 def verify_claim(
     claim: str,
-    chunk: dict[str, Any],
+    chunks: dict[str, Any] | list[dict[str, Any]],
     model: CrossEncoder,
 ) -> dict[str, Any]:
     """
-    Scores whether a chunk entails (supports) a specific claim.
+    Scores whether the cited source supports a specific claim.
 
     We use the CrossEncoder for this. It was trained on passage relevance,
     but high relevance between a claim and a chunk means the chunk supports
@@ -141,15 +195,25 @@ def verify_claim(
     model (e.g. facebook/bart-large-mnli) which is trained specifically for
     entailment/contradiction/neutral classification. For our scope, CrossEncoder is sufficient.
 
+    Args:
+        chunks: every chunk from the cited source (a single chunk is also
+                accepted, for callers that already narrowed it down). The
+                claim is scored against each and the BEST score wins — the
+                claim only has to be supported SOMEWHERE in the document it cites.
+
     Returns:
         Dict with: claim, source, score, verified (bool), reason
     """
-    score = float(model.predict([(claim, chunk.get("content") or "")])[0])
+    candidates = [chunks] if isinstance(chunks, dict) else list(chunks)
+    scores = model.predict([(claim, c.get("content") or "") for c in candidates])
+
+    best_idx = int(max(range(len(candidates)), key=lambda i: float(scores[i])))
+    score    = float(scores[best_idx])
     verified = score >= CITATION_MIN_SCORE
 
     return {
         "claim":    claim,
-        "source":   chunk["source"],
+        "source":   candidates[best_idx]["source"],
         "score":    score,
         "verified": verified,
         "reason":   "supported" if verified else f"low entailment score ({score:.2f} < {CITATION_MIN_SCORE})",
@@ -174,18 +238,37 @@ def verify_citations(
         Dict containing:
             - verified_claims:    list of claims that ARE supported by sources
             - unverified_claims:  list of claims that are NOT supported
-            - verification_rate:  float (0.0 to 1.0) — % of citations verified
+            - verification_rate:  float (0.0 to 1.0) — % of citations verified,
+                                  or None when nothing could be checked
             - passed:             bool — True if all citations verified
+            - status:             "verified" | "flagged" | "unverifiable" | "not_applicable"
             - summary:            human-readable summary string
 
     The LangGraph Verification Agent node will check `passed`.
     If False, it can trigger answer regeneration with a stricter prompt.
+
+    WHY `status` EXISTS SEPARATELY FROM `passed`:
+        "every citation checked out" and "there was nothing to check" are very
+        different facts, and collapsing both into passed=True is how the UI
+        ended up stamping "✓ Citations verified" on an unchecked answer.
+        `passed` drives the retry decision; `status` is what the UI must render.
     """
     if not answer:
         return {
             "verified_claims": [], "unverified_claims": [],
-            "verification_rate": 1.0, "passed": True,
+            "verification_rate": None, "passed": True,
+            "status": "not_applicable",
             "summary": "No answer to verify."
+        }
+
+    # No context chunks means there is nothing to verify against — this is the
+    # out_of_scope path (a polite decline), not a citation failure.
+    if not chunks:
+        return {
+            "verified_claims": [], "unverified_claims": [],
+            "verification_rate": None, "passed": True,
+            "status": "not_applicable",
+            "summary": "No retrieved context — nothing to verify against."
         }
 
     model = get_cross_encoder()
@@ -194,12 +277,14 @@ def verify_citations(
     cited_claims = parse_citations(answer)
 
     if not cited_claims:
-        # No citations found — either the LLM didn't cite, or the format is off
-        # This is itself a signal worth logging; we pass but flag it
+        # The answer cites nothing, but it WAS built from retrieved context —
+        # so this is a real failure of the citation contract, not a free pass.
+        # passed=False lets route_after_verification regenerate it once.
         return {
             "verified_claims": [], "unverified_claims": [],
-            "verification_rate": 1.0, "passed": True,
-            "summary": "No citations found in answer. Cannot verify. Check LLM citation format."
+            "verification_rate": None, "passed": False,
+            "status": "unverifiable",
+            "summary": "No citations found in answer — nothing could be verified."
         }
 
     # Step 2: Verify each cited claim
@@ -207,10 +292,10 @@ def verify_citations(
     unverified = []
 
     for cited in cited_claims:
-        # Find the chunk the LLM cited
-        chunk = find_source_chunk(cited["source"], chunks)
+        # Every chunk the cited document contributed to this context
+        source_chunks = find_source_chunks(cited["source"], chunks)
 
-        if chunk is None:
+        if not source_chunks:
             # LLM cited a source that doesn't exist in our context — hallucinated citation
             unverified.append({
                 "claim":    cited["claim"],
@@ -221,8 +306,8 @@ def verify_citations(
             })
             continue
 
-        # Score the claim against the chunk
-        result = verify_claim(cited["claim"], chunk, model)
+        # Score the claim against the cited document's chunks (best match wins)
+        result = verify_claim(cited["claim"], source_chunks, model)
 
         if result["verified"]:
             verified.append(result)
@@ -244,6 +329,8 @@ def verify_citations(
         "unverified_claims": unverified,
         "verification_rate": verification_rate,
         "passed":            passed,
+        "status":            "verified" if passed else "flagged",
+        "checked_count":     total,
         "summary":           summary,
     }
 

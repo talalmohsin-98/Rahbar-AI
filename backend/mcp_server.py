@@ -180,8 +180,14 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             result = {
                 "answer":             state.get("final_answer") or state.get("answer", ""),
                 "intent":             state.get("intent"),
-                "citations_verified": state.get("citation_result", {}).get("passed", True),
-                "hallucination_rate": state.get("hallucination_result", {}).get("hallucination_rate", 0),
+                # `or {}` — these keys exist but hold None when the pipeline had
+                # no answer to check, and None.get() would raise.
+                # hallucination_rate is None when nothing could be evaluated;
+                # report that as null rather than as a flattering 0.
+                "citations_verified": (state.get("citation_result") or {}).get("passed", True),
+                "citation_status":    (state.get("citation_result") or {}).get("status"),
+                "hallucination_rate": (state.get("hallucination_result") or {}).get("hallucination_rate"),
+                "answer_complete":    (state.get("completeness_result") or {}).get("passed", True),
                 "sources": list({
                     c.get("source") for c in state.get("compressed_chunks", [])
                     if c.get("source")

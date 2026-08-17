@@ -20,6 +20,13 @@ import numpy as np
 # Fake CrossEncoder (used by reranker.py, compressor.py, citation_verifier.py,
 # hallucination_eval.py). Scores pairs by lexical word-overlap so tests are
 # deterministic and meaningful (relevant text really does score higher).
+#
+# The overlap count is mapped onto a SIGNED range, because the real
+# ms-marco-MiniLM CrossEncoder emits roughly -11 (irrelevant) to +10 (strongly
+# relevant), and every threshold in the pipeline (MIN_RERANK_SCORE,
+# CITATION_MIN_SCORE, HALLUCINATION_THRESHOLD) is calibrated in that space.
+# A stub returning only 0..n made "completely unrelated" score 0 — above every
+# negative threshold — so a test could not tell rejection from acceptance.
 # ---------------------------------------------------------------------------
 class FakeCrossEncoder:
     def __init__(self, *args, **kwargs):
@@ -31,7 +38,7 @@ class FakeCrossEncoder:
             wa = set(str(a).lower().split())
             wb = set(str(b).lower().split())
             overlap = len(wa & wb)
-            scores.append(float(overlap))
+            scores.append(float(overlap) * 2.0 - 4.0)   # 0 overlap => -4.0
         return np.array(scores)
 
 

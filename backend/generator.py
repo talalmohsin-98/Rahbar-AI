@@ -2,6 +2,8 @@ import os
 from typing import Any
 from groq import Groq
 
+from config import ANSWER_MODEL, FAST_MODEL
+
 
 # ---------------------------------------------------------------------------
 # 1. CLIENT
@@ -33,6 +35,13 @@ FORMATTING RULES:
 6. Do NOT use markdown emphasis characters — no asterisks (* or **) and no bullet symbols like •.
 7. Whenever your answer enumerates multiple documents, requirements, steps, options, or fees, you MUST format them as a list — put EACH item on its OWN line beginning with "- " using a real line break. Never pack multiple items into one sentence or paragraph. A short lead-in sentence before the list is fine.
 8. The modern CNIC is issued as a "Smart NIC" (a smart card). Smart NIC fees (e.g. Rs. 750 normal / Rs. 1,500 urgent) are the current CNIC card fees; the plain "New CNIC" row (Rs. 0 normal) is the legacy card. Treat a citizen asking about "CNIC fee" as asking about the Smart NIC/CNIC card fees.
+
+COMPLETENESS RULES:
+9. A one-line answer is almost never a useful answer. If the passages give only one or two items for what was asked, keep going and report the rest of what THOSE SAME passages say about that service: the steps carried out at the office, the fee, and the processing time. Give each its own "- " line under a short label such as "At the centre:" or "Fee:".
+   Worked example — the citizen asks which documents a CNIC renewal needs, and the passage lists "Requirements: CNIC number" plus a five-step centre process (token, biometric capture, interview, payment, card printing). A correct answer states the CNIC number requirement AND all five steps. An answer that stops at "CNIC number" is wrong, because it hides from the citizen that they must attend in person for biometrics.
+   Everything you add must still come from a passage: never write what "typically" or "usually" happens and never fill a gap from your own knowledge. That restriction is about invented material only — it is never a reason to leave out something the passages do contain.
+10. Never present a requirement list as exhaustive when the passages show only a bare item or two. In that case end with one plain line, with NO citation tag on it (it is your advice to the citizen, not a statement from the documents): "The published requirements list is brief — confirm the exact documents for your case at a NADRA Registration Centre (or the relevant office)." Adapt the office name to the service being asked about.
+11. If the passages describe a numbered procedure with steps missing (for example the numbering jumps), describe only the steps actually present and do not invent the gaps.
 """
 
 INTENT_INSTRUCTIONS = {
@@ -106,6 +115,7 @@ def build_messages(
     question: str,
     context: str,
     intent: str,
+    feedback: str | None = None,
 ) -> list[dict[str, str]]:
     """
     Constructs the messages list for the Groq chat completion API.
@@ -131,6 +141,12 @@ Question: {question}
 
 Answer based strictly on the passages above. Cite every claim."""
 
+    # Retry feedback goes LAST, after the question — a revision instruction
+    # buried above the context gets treated as background. See
+    # completeness_check.build_retry_feedback for what this contains.
+    if feedback:
+        user_content += f"\n\n---\n\n{feedback}"
+
     return [
         {"role": "system",  "content": system_prompt},
         {"role": "user",    "content": user_content},
@@ -140,12 +156,23 @@ Answer based strictly on the passages above. Cite every claim."""
 # ---------------------------------------------------------------------------
 # 5. MAIN GENERATION FUNCTION
 # ---------------------------------------------------------------------------
+def _reasoning_tokens(response: Any) -> int:
+    """
+    Reasoning tokens spent by the model, or 0 if it doesn't report them.
+
+    Groq returns these under usage.completion_tokens_details.reasoning_tokens
+    for the gpt-oss models. The tests' stub Groq client returns a plain object
+    without those attributes, so every access is guarded.
+    """
+    details = getattr(getattr(response, "usage", None), "completion_tokens_details", None)
+    return int(getattr(details, "reasoning_tokens", 0) or 0)
 def generate(
     question: str,
     chunks: list[dict[str, Any]],
     intent: str = "factual",
     temperature: float = 0.1,
-    max_tokens: int = 800,
+    max_tokens: int = 1400,
+    feedback: str | None = None,
 ) -> dict[str, Any]:
     """
     Generates a cited answer from compressed chunks.
@@ -155,7 +182,16 @@ def generate(
         chunks:      Compressed chunks from compressor.py.
         intent:      From intent_router — controls answer format.
         temperature: Low (0.1) for factual accuracy. Higher = more creative but less accurate.
-        max_tokens:  Cap on answer length. 800 tokens ≈ 600 words — enough for thorough answer.
+        feedback:    Revision instruction for a regeneration — what was wrong
+                     with the previous attempt, with the omitted passages
+                     quoted. None on a first attempt.
+        max_tokens:  Cap on completion length. NOTE this budget is shared with
+                     the model's hidden reasoning: ANSWER_MODEL (gpt-oss-120b)
+                     is a reasoning model and spends 150-300 completion tokens
+                     thinking before it emits a single visible character. At the
+                     old 800 cap a long list answer could be cut off mid-item
+                     with no error raised anywhere — the truncated text just
+                     became the final answer.
 
     Returns:
         Dict with:
@@ -163,13 +199,16 @@ def generate(
             model:           Which model was used
             prompt_tokens:   Input token count (for cost tracking)
             completion_tokens: Output token count
+            reasoning_tokens:  Of which spent on hidden reasoning
+            finish_reason:   "stop" (complete) or "length" (hit the cap)
+            truncated:       True if the answer was cut off mid-generation
             context_used:    How many chunks were sent to the LLM
     """
     # Handle out-of-scope early — no context needed, different prompt
     if intent == "out_of_scope":
         client = get_groq_client()
         response = client.chat.completions.create(
-            model= "llama-3.1-8b-instant",   # small model fine for a polite decline
+            model=FAST_MODEL,   # small model fine for a polite decline
             messages=[
                 {"role": "system", "content": INTENT_INSTRUCTIONS["out_of_scope"]},
                 {"role": "user",   "content": question},
@@ -179,9 +218,12 @@ def generate(
         )
         return {
             "answer":             (response.choices[0].message.content or "").strip(),
-            "model":              "llama-3.1-8b-instant",
+            "model":              FAST_MODEL,
             "prompt_tokens":      response.usage.prompt_tokens,
             "completion_tokens":  response.usage.completion_tokens,
+            "reasoning_tokens":   _reasoning_tokens(response),
+            "finish_reason":      getattr(response.choices[0], "finish_reason", "stop"),
+            "truncated":          getattr(response.choices[0], "finish_reason", "stop") == "length",
             "context_used":       0,
         }
 
@@ -189,24 +231,36 @@ def generate(
     context = format_context(chunks)
 
     # Build messages
-    messages = build_messages(question, context, intent)
+    messages = build_messages(question, context, intent, feedback=feedback)
 
     # Call Groq — larger model for final answer quality
     client = get_groq_client()
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
+        model=ANSWER_MODEL,
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens,
     )
 
-    answer = (response.choices[0].message.content or "").strip()
+    choice = response.choices[0]
+    answer = (choice.message.content or "").strip()
+
+    # A truncated answer is a broken answer, and nothing downstream can detect
+    # that from the text alone — the citation verifier and hallucination eval
+    # both happily score a half-written list. Surface it instead of hiding it.
+    finish_reason = getattr(choice, "finish_reason", "stop")
+    truncated     = finish_reason == "length"
+    if truncated:
+        print(f"[Generator] WARNING: hit the {max_tokens}-token cap — answer is cut off.")
 
     return {
         "answer":             answer,
-        "model":              "openai/gpt-oss-120b",
+        "model":              ANSWER_MODEL,
         "prompt_tokens":      response.usage.prompt_tokens,
         "completion_tokens":  response.usage.completion_tokens,
+        "reasoning_tokens":   _reasoning_tokens(response),
+        "finish_reason":      finish_reason,
+        "truncated":          truncated,
         "context_used":       len(chunks),
     }
 

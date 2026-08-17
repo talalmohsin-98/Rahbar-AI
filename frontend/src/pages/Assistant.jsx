@@ -3,6 +3,52 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { formatAnswer } from '../lib/chatFormatting';
 
+/**
+ * Trust badges under an answer.
+ *
+ * These must never claim more than the pipeline actually checked. The old
+ * version rendered a green "✓ Citations verified" whenever `passed !== false`
+ * — which included the case where the verifier parsed ZERO citations and
+ * couldn't check anything, and the case where citation_result was null. It
+ * also printed "Hal rate: 0%" when no claim had been evaluated at all.
+ * Both read as a guarantee to a citizen acting on the answer.
+ *
+ * So: green only for a real, non-empty verification; yellow when claims were
+ * flagged; neutral grey when nothing could be checked.
+ */
+function AnswerBadges({ data }) {
+  const cit = data.citation_result;
+  const hal = data.hallucination_result;
+
+  const citStatus  = cit?.status ?? (cit?.passed === false ? 'flagged' : 'unverifiable');
+  const checked    = cit?.checked_count ?? 0;
+  const unverified = cit?.unverified_claims?.length ?? 0;
+
+  const citBadge =
+    citStatus === 'verified'   ? { cls: 'badge--green', text: `✓ ${checked} citation${checked === 1 ? '' : 's'} verified` }
+  : citStatus === 'flagged'    ? { cls: 'badge--yellow', text: `⚠ ${unverified} of ${checked} citations unverified` }
+  : citStatus === 'not_applicable' ? null
+  :                              { cls: 'badge--slate', text: 'Citations not verified' };
+
+  const evaluated = hal?.evaluated_count ?? 0;
+  const halBadge =
+    hal?.status !== 'evaluated' || evaluated === 0
+      ? { cls: 'badge--slate', text: 'Grounding not checked' }
+      : { cls: hal.hallucinated_count > 0 ? 'badge--yellow' : 'badge--green',
+          text: `${hal.grounded_count}/${evaluated} claims grounded` };
+
+  return (
+    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {citBadge && <span className={`badge ${citBadge.cls}`}>{citBadge.text}</span>}
+      <span className={`badge ${halBadge.cls}`}>{halBadge.text}</span>
+      {data.generation_meta?.truncated && (
+        <span className="badge badge--yellow">⚠ Answer cut off</span>
+      )}
+      <span className="badge badge--navy">{data.intent}</span>
+    </div>
+  );
+}
+
 function Message({ msg }) {
   const isUser = msg.role === 'user';
   const isDecline = msg.declined;
@@ -50,19 +96,7 @@ function Message({ msg }) {
             {formatAnswer(msg.content)}
           </div>
 
-          {msg.pipelineData && (
-            <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span className="badge badge--green">
-                {msg.pipelineData.citation_result?.passed !== false ? '✓ Citations verified' : '⚠ Citations flagged'}
-              </span>
-              <span className="badge badge--slate">
-                Hal rate: {Math.round((msg.pipelineData.hallucination_result?.hallucination_rate ?? 0) * 100)}%
-              </span>
-              <span className="badge badge--navy">
-                {msg.pipelineData.intent}
-              </span>
-            </div>
-          )}
+          {msg.pipelineData && <AnswerBadges data={msg.pipelineData} />}
         </div>
       </div>
     </div>

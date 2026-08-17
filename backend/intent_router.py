@@ -2,6 +2,8 @@ import os
 from enum import Enum
 from groq import Groq
 
+from config import FAST_MODEL
+
 # ---------------------------------------------------------------------------
 # 1. INTENT CATEGORIES
 # ---------------------------------------------------------------------------
@@ -61,7 +63,7 @@ def _call_llm(question: str) -> str:
     """
     client = get_groq_client()
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",   # Small, fast model — classification doesn't need GPT-4
+        model=FAST_MODEL,   # Small, fast model — classification doesn't need GPT-4
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user",   "content": question},

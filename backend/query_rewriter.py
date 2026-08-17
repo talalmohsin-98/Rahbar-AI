@@ -2,6 +2,7 @@ import os
 import json
 from concurrent.futures import ThreadPoolExecutor
 from groq import Groq
+from config import FAST_MODEL
 from intent_router import Intent  # we use intent to choose rewriting strategy
 
 
@@ -53,7 +54,7 @@ def generate_hyde_query(question: str) -> str:
     """
     client = get_groq_client()
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[
             {"role": "system", "content": HYDE_SYSTEM_PROMPT},
             {"role": "user",   "content": question},
@@ -101,7 +102,7 @@ def generate_sub_questions(question: str) -> list[str]:
     """
     client = get_groq_client()
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[
             {"role": "system", "content": SUBQ_SYSTEM_PROMPT},
             {"role": "user",   "content": question},

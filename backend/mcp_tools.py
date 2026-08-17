@@ -52,6 +52,8 @@ import json
 from typing import Any
 from groq import Groq
 
+from config import FAST_MODEL
+
 
 # ---------------------------------------------------------------------------
 # 1. CLIENT
@@ -125,7 +127,7 @@ The response must be valid JSON with these fields:
 Return ONLY valid JSON. No explanation."""
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
         max_tokens=600,
@@ -173,7 +175,7 @@ Return a JSON response for this query: "{query}"
 Return ONLY valid JSON."""
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
         max_tokens=500,
@@ -221,7 +223,7 @@ Return a JSON response for this query: "{query}"
 Return ONLY valid JSON."""
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
         max_tokens=500,
@@ -269,7 +271,7 @@ Text: "{text[:1000]}"
 }}"""
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.0,
         max_tokens=400,
@@ -318,7 +320,7 @@ Document B: {doc_b[:500]}
 }}"""
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=FAST_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
         max_tokens=500,

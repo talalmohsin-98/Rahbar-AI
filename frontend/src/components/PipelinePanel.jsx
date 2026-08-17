@@ -66,11 +66,18 @@ export default function PipelinePanel({ open, onClose, data }) {
     intent, routing_config, search_queries = [],
     raw_chunks = [], reranked_chunks = [], compressed_chunks = [],
     tool_results = [], generation_meta = {}, citation_result = {},
-    hallucination_result = {}, retry_count = 0,
+    hallucination_result = {}, completeness_result = {}, retry_count = 0,
   } = data;
 
-  const halRate = hallucination_result?.hallucination_rate ?? 0;
-  const citRate = citation_result?.verification_rate ?? 1;
+  // Both rates are null when the stage couldn't measure anything (no citations
+  // parsed / no evaluable claims). Defaulting those to 0% and 100% respectively
+  // is how the inspector used to report a perfect score for an unchecked answer.
+  const halRate = hallucination_result?.hallucination_rate;
+  const citRate = citation_result?.verification_rate;
+  const pct = (r) => (r === null || r === undefined ? 'not measured' : `${Math.round(r * 100)}%`);
+  const allChecksPassed = citation_result?.passed !== false
+    && hallucination_result?.passed !== false
+    && completeness_result?.passed !== false;
 
   return (
     <div className={`pipeline-panel${open ? ' open' : ''}`}>
@@ -149,7 +156,7 @@ export default function PipelinePanel({ open, onClose, data }) {
             ⚖️ CrossEncoder Reranker
           </div>
           <StageRow icon="" label="After Reranking" value={reranked_chunks.length}
-            sub="MIN_SCORE = 2.8" />
+            sub="noise floor = 0.0 (relative)" />
           {reranked_chunks.slice(0, 3).map(c => (
             <ChunkRow key={c.chunk_id} rank={c.rank}
               source={c.source} score={c.rerank_score} content={c.content} />
@@ -186,7 +193,7 @@ export default function PipelinePanel({ open, onClose, data }) {
                         textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 8 }}>
             💬 Generator
           </div>
-          <StageRow icon="" label="Model" value={generation_meta.model || 'llama3-70b'} colour="rgba(255,255,255,.7)" />
+          <StageRow icon="" label="Model" value={generation_meta.model || 'openai/gpt-oss-120b'} colour="rgba(255,255,255,.7)" />
           <StageRow icon="" label="Tokens (in/out)"
             value={`${generation_meta.prompt_tokens || 0} / ${generation_meta.completion_tokens || 0}`}
             colour="rgba(255,255,255,.7)" />
@@ -202,14 +209,29 @@ export default function PipelinePanel({ open, onClose, data }) {
             📎 Verification
           </div>
           <StageRow icon="" label="Citation Rate"
-            value={`${Math.round(citRate * 100)}%`}
-            colour={citRate >= 0.8 ? 'var(--green)' : '#EF4444'} />
+            value={pct(citRate)}
+            sub={citation_result?.checked_count != null
+              ? `${citation_result.checked_count} citation(s) checked` : undefined}
+            colour={citRate == null ? 'rgba(255,255,255,.5)'
+                  : citRate >= 0.8 ? 'var(--green)' : '#EF4444'} />
           <StageRow icon="" label="Hallucination Rate"
-            value={`${Math.round(halRate * 100)}%`}
-            colour={halRate < 0.2 ? 'var(--green)' : '#EF4444'} />
+            value={pct(halRate)}
+            sub={hallucination_result?.evaluated_count != null
+              ? `${hallucination_result.evaluated_count} claim(s) evaluated` : undefined}
+            colour={halRate == null ? 'rgba(255,255,255,.5)'
+                  : halRate < 0.2 ? 'var(--green)' : '#EF4444'} />
+          <StageRow icon="" label="Completeness"
+            value={completeness_result?.status === 'thin' ? '⚠ context unused'
+                 : completeness_result?.status === 'complete' ? '✓ context used'
+                 : '—'}
+            sub={completeness_result?.claim_lines != null
+              ? `${completeness_result.claim_lines} claim(s) in answer` : undefined}
+            colour={completeness_result?.status === 'thin' ? '#F59E0B'
+                  : completeness_result?.status === 'complete' ? 'var(--green)'
+                  : 'rgba(255,255,255,.5)'} />
           <StageRow icon="" label="Overall"
-            value={citation_result?.passed && hallucination_result?.passed ? '✓ PASSED' : '⚠ FLAGGED'}
-            colour={citation_result?.passed && hallucination_result?.passed ? 'var(--green)' : '#F59E0B'} />
+            value={allChecksPassed ? '✓ PASSED' : '⚠ FLAGGED'}
+            colour={allChecksPassed ? 'var(--green)' : '#F59E0B'} />
         </div>
       </div>
     </div>

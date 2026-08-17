@@ -7,7 +7,7 @@ const PIPELINE_STAGES = [
   { icon: '🔍', label: 'Hybrid Search', desc: 'Runs dense vector search (pgvector + BAAI/bge-large-en) and BM25 keyword search in parallel. Fuses results with Reciprocal Rank Fusion (RRF).' },
   { icon: '⚖️', label: 'CrossEncoder Reranker', desc: 'Re-scores retrieved chunks using ms-marco-MiniLM-L-6-v2, which reads the query and chunk together. Filters below MIN_RERANK_SCORE = 2.8.' },
   { icon: '✂️', label: 'Context Compressor', desc: 'Scores each sentence in each chunk against the question. Keeps the top-4 most relevant sentences per chunk within a 1,200-token budget.' },
-  { icon: '💬', label: 'Generator', desc: 'Calls Groq (llama3-70b-8192) with compressed context and intent-specific formatting instructions. Temperature 0.1 for factual accuracy.' },
+  { icon: '💬', label: 'Generator', desc: 'Calls Groq (openai/gpt-oss-120b) with compressed context and intent-specific formatting instructions. Temperature 0.1 for factual accuracy.' },
   { icon: '📎', label: 'Citation Verifier', desc: 'Checks each [source: file] citation in the answer against its chunk using the CrossEncoder. Flags claims not supported by the cited source.' },
   { icon: '🔬', label: 'Hallucination Evaluator', desc: 'Scores every sentence in the answer against all chunks. Flags sentences with no chunk support. Triggers retry at temperature=0.0 if rate >20%.' },
 ];
@@ -200,7 +200,7 @@ export default function About() {
                 ['Vector DB', 'pgvector (PostgreSQL)'],
                 ['BM25', 'rank_bm25'],
                 ['Reranker', 'ms-marco-MiniLM-L-6-v2'],
-                ['LLM inference', 'Groq (llama3-70b + llama3-8b)'],
+                ['LLM inference', 'Groq (gpt-oss-120b + gpt-oss-20b)'],
                 ['Orchestration', 'LangGraph StateGraph'],
                 ['MCP tools', 'Python mcp SDK (SSE transport)'],
                 ['Backend', 'FastAPI (Railway)'],

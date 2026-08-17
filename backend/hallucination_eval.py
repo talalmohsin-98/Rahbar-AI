@@ -45,12 +45,25 @@ from compressor import split_sentences
 # ---------------------------------------------------------------------------
 # 1. CONSTANTS
 # ---------------------------------------------------------------------------
-# Minimum CrossEncoder score for a sentence to be considered grounded.
-# A sentence with no chunk scoring above this is flagged as potential hallucination.
-HALLUCINATION_THRESHOLD = float(os.getenv("HALLUCINATION_THRESHOLD", "0.5"))
+# Minimum CrossEncoder score for a claim to be considered grounded.
+# A claim with no chunk scoring above this is flagged as potential hallucination.
+#
+# Shares the calibration measured for CITATION_MIN_SCORE (see citation_verifier.py
+# for the numbers): the same model scores the same kind of short claim against
+# the same chunks, so the same floor applies. The old 0.5 was set for
+# full-sentence claims and flags ordinary paraphrases like "A brief interview
+# with the Officer-In-Charge" (real score -2.62) as hallucinations.
+HALLUCINATION_THRESHOLD = float(os.getenv("HALLUCINATION_THRESHOLD", "-3.0"))
 
-# Sentences shorter than this are skipped (transition phrases, connectives)
-MIN_SENTENCE_LENGTH = 15
+# Claims shorter than this are skipped (transition phrases, connectives).
+# Kept deliberately low: a real requirement line can be as short as
+# "CNIC number" (11 chars), and the old 15-char floor silently discarded
+# exactly those — leaving list answers with zero evaluable claims and an
+# undeserved "0% hallucination" score.
+MIN_CLAIM_LENGTH = int(os.getenv("MIN_CLAIM_LENGTH", "8"))
+
+# Leading list marker on a bullet or numbered line: "- ", "* ", "• ", "1. ", "2) "
+LIST_MARKER = re.compile(r'^\s*(?:[-*•]|\d+[.)])\s*')
 
 
 # ---------------------------------------------------------------------------
@@ -64,6 +77,58 @@ def strip_citation_tags(text: str) -> str:
     "NADRA charges Rs. 750. [source: nadra.pdf]" → "NADRA charges Rs. 750."
     """
     return re.sub(r'\[source:[^\]]+\]', '', text).strip()
+
+
+# ---------------------------------------------------------------------------
+# 2b. SPLIT AN ANSWER INTO CHECKABLE CLAIMS
+# ---------------------------------------------------------------------------
+def split_claims(text: str) -> list[str]:
+    """
+    Splits an answer into the units we actually score for grounding.
+
+    Why not reuse compressor.split_sentences() directly?
+        That splitter is built for prose: it breaks on ".!?" followed by a
+        capital letter and drops anything under 20 characters. Run it over
+        the list-formatted answers this system is prompted to produce:
+
+            To renew your CNIC you need to provide:
+            - CNIC number
+
+        ...and the whole answer comes back as ONE unit. It then scores 4.87
+        against the chunk it was copied from and the UI reports "0%
+        hallucination" — a 0 out of a sample of 1, measured on a blob.
+        Each list item is a separate factual claim and has to be scored as one.
+
+    Rules:
+        - Every line is its own claim boundary (that's what makes bullets work)
+        - List markers are stripped so "- CNIC number" scores as "CNIC number"
+        - Prose lines are further split into sentences
+        - Lead-in lines ending in ':' are structural, not claims — skipped
+        - Units with no letters or digits (separators, stray punctuation) are skipped
+    """
+    claims: list[str] = []
+
+    for raw_line in (text or "").split("\n"):
+        line = LIST_MARKER.sub("", raw_line).strip()
+        if not line:
+            continue
+
+        # "You will need the following documents:" states nothing checkable.
+        if line.endswith(":"):
+            continue
+
+        # A bullet is one claim; a prose line may hold several sentences.
+        units = split_sentences(line) or [line]
+
+        for unit in units:
+            unit = unit.strip()
+            if len(unit) < MIN_CLAIM_LENGTH:
+                continue
+            if not re.search(r'[A-Za-z0-9]', unit):
+                continue
+            claims.append(unit)
+
+    return claims
 
 
 # ---------------------------------------------------------------------------
@@ -144,9 +209,23 @@ def evaluate_hallucination(
     if not answer:
         return {
             "sentence_results": [], "grounded_count": 0,
-            "hallucinated_count": 0, "hallucination_rate": 0.0,
+            "hallucinated_count": 0, "hallucination_rate": None,
             "passed": True, "flagged_sentences": [],
+            "evaluated_count": 0, "status": "not_evaluated",
             "summary": "No answer to evaluate."
+        }
+
+    # No context means the answer is a decline ("I could not find this
+    # information...") or an out-of-scope reply. Scoring it against nothing
+    # marks it 100% ungrounded, fails verification, and burns a regeneration
+    # to produce the identical decline. There is nothing here to hallucinate.
+    if not chunks:
+        return {
+            "sentence_results": [], "grounded_count": 0,
+            "hallucinated_count": 0, "hallucination_rate": None,
+            "passed": True, "flagged_sentences": [],
+            "evaluated_count": 0, "status": "not_evaluated",
+            "summary": "No retrieved context — nothing to evaluate against."
         }
 
     model = get_cross_encoder()
@@ -154,18 +233,18 @@ def evaluate_hallucination(
     # Strip citation tags before splitting (they confuse sentence splitting)
     clean_answer = strip_citation_tags(answer)
 
-    # Split into sentences
-    sentences = split_sentences(clean_answer)
-
-    # Filter very short sentences (transition phrases)
-    sentences = [s for s in sentences if len(s) >= MIN_SENTENCE_LENGTH]
+    # Split into individually checkable claims (bullets included — see split_claims)
+    sentences = split_claims(clean_answer)
 
     if not sentences:
+        # rate stays None, NOT 0.0: "nothing was measured" must never render
+        # as "0% hallucination", which is what the old return value caused.
         return {
             "sentence_results": [], "grounded_count": 0,
-            "hallucinated_count": 0, "hallucination_rate": 0.0,
+            "hallucinated_count": 0, "hallucination_rate": None,
             "passed": True, "flagged_sentences": [],
-            "summary": "No evaluable sentences found."
+            "evaluated_count": 0, "status": "not_evaluated",
+            "summary": "No evaluable claims found in answer."
         }
 
     # Evaluate each sentence
@@ -194,6 +273,8 @@ def evaluate_hallucination(
         "hallucination_rate": hallucination_rate,
         "passed":             passed,
         "flagged_sentences":  flagged,
+        "evaluated_count":    len(results),
+        "status":             "evaluated",
         "summary":            summary,
     }
 

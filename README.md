@@ -124,6 +124,7 @@ flowchart TD
     subgraph V[Verification Agent]
         direction TB
         CV[Citation Verifier] --> HE[Hallucination Evaluator]
+        HE --> CC[Completeness Check<br/>was retrieved material dropped?]
     end
 
     V -->|failed & retries left| G
@@ -132,14 +133,21 @@ flowchart TD
 
 **Pipeline stages, in order:**
 
-1. **Intent Router** (`intent_router.py`) — classifies the question as `factual` / `comparison` / `procedural` / `out_of_scope` using Groq `llama-3.1-8b-instant`, `temperature=0`. Drives retrieval depth and answer format downstream.
+1. **Intent Router** (`intent_router.py`) — classifies the question as `factual` / `comparison` / `procedural` / `out_of_scope` using Groq `openai/gpt-oss-20b`, `temperature=0`. Drives retrieval depth and answer format downstream.
 2. **Tool Selector** (`mcp_tools.py`) — keyword-routes to simulated "live data" tools (`search_nadra`, `search_fbr`, `search_passport`, `extract_entities`, `compare_documents`) when the question implies tracking/status/current data.
 3. **Query Rewriter** (`query_rewriter.py`) — expands the question into 3-5 search variants: HyDE passage + 3 sub-questions (concurrent Groq calls), plus deterministic keyword-boost queries for known problem phrasings (fee questions, "required documents" questions).
 4. **Hybrid Search** (`hybrid_search.py`, `retrieval.py`, `bm25_retrieval.py`) — every query variant runs dense (pgvector, `BAAI/bge-large-en`) and BM25 search concurrently; all ranked lists are fused with Reciprocal Rank Fusion (`k=60`).
 5. **Cross-Encoder Reranker** (`reranker.py`) — `cross-encoder/ms-marco-MiniLM-L-6-v2` re-scores the fused pool against the original question; chunks below a minimum score are dropped.
-6. **Context Compressor** (`compressor.py`) — re-scores individual *sentences* within surviving chunks and greedily packs the highest-value sentences into a fixed token budget.
+6. **Context Compressor** (`compressor.py`) — re-scores individual *sentences* within surviving chunks and greedily packs the highest-value sentences into a fixed token budget. Chunks containing lists (a requirements list, a numbered procedure) take a separate path that keeps whole blocks: sentence-level trimming used to delete steps 2-3 of a five-step procedure, which reads as complete but isn't.
 7. **Generator** (`generator.py`) — Groq `openai/gpt-oss-120b` (`temperature=0.1`) writes the answer with mandatory inline `[source: filename]` citations, using an intent-specific system prompt (factual / comparison / procedural / out-of-scope / document Q&A).
-8. **Verification Agent** (`citation_verifier.py` + `hallucination_eval.py`) — the citation verifier checks each *cited* claim against its specific source chunk; the hallucination evaluator checks *every* sentence against the whole context pool. If either fails, the graph loops back to the generator once more at `temperature=0`.
+8. **Verification Agent** (`citation_verifier.py` + `hallucination_eval.py` + `completeness_check.py`) — three independent checks:
+   - *citations*: each cited claim is scored against the chunks of the document it cites. Claims are delimited per line, so bulleted answers are verifiable (they carry no terminal punctuation).
+   - *grounding*: every claim, cited or not, is scored against the whole context pool — again per bullet, not per prose sentence.
+   - *completeness*: asks the question the other two can't — was retrieved material that answers the question left unused? A verbatim, correctly-cited one-line answer passes every truthfulness check and can still be useless.
+
+   A failure in any of the three loops back to the generator once, at `temperature=0`. A completeness failure quotes the dropped passages into the retry prompt: a generic "be more complete" retry measurably reproduced the same short answer.
+
+   Where a check *cannot* run (no citations parsed, no evaluable claims, no retrieved context) it reports `unverifiable` / `not_evaluated` rather than a pass — the UI shows a neutral "not verified" badge instead of a green tick.
 
 All state flows through a single `PipelineState` TypedDict inside a compiled **LangGraph** `StateGraph` (`graph.py`), so every intermediate value (rewritten queries, raw/reranked/compressed chunks, tool results, verification scores) is available to the frontend's **Pipeline Inspector** panel for full transparency.
 
@@ -147,7 +155,7 @@ All state flows through a single `PipelineState` TypedDict inside a compiled **L
 
 | Layer | Choice | Notes |
 |---|---|---|
-| LLM inference | **Groq** — `openai/gpt-oss-120b` (generation), `llama-3.1-8b-instant` (routing, query rewriting, tool simulation, out-of-scope decline) | Split by cost/latency: cheap, fast model for structured/short tasks; larger model only for the final cited answer |
+| LLM inference | **Groq** — `openai/gpt-oss-120b` (generation), `openai/gpt-oss-20b` (routing, query rewriting, tool simulation, out-of-scope decline) | Split by cost/latency: cheap, fast model for structured/short tasks; larger model only for the final cited answer. Both IDs live in `backend/config.py` and are env-overridable via `GROQ_FAST_MODEL` / `GROQ_ANSWER_MODEL` |
 | Embeddings | **`BAAI/bge-large-en`** (HuggingFace, `sentence-transformers`), 1024-dim | Free, runs locally, no per-call cost |
 | Vector store | **PostgreSQL + pgvector** | Cosine distance (`<=>` operator) |
 | Keyword search | **`rank_bm25`** (BM25Okapi), disk-cached index | Custom tokenizer preserves hyphenated government codes (e.g. `b-form`) |
@@ -174,6 +182,7 @@ Rahbar AI - Citizen Services Assistant/
 │   ├── generator.py            Groq LLM answer generation + prompts
 │   ├── citation_verifier.py    Per-claim citation grounding check
 │   ├── hallucination_eval.py   Whole-answer grounding check
+│   ├── completeness_check.py   Did the answer use what was retrieved?
 │   ├── mcp_tools.py            Simulated gov-service tool functions
 │   ├── mcp_server.py           Standalone MCP server (SSE, port 8001)
 │   ├── document_qa.py          Upload-your-own-document Q&A (in-memory) — backend only, no UI (see Scope)

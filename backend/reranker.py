@@ -27,6 +27,20 @@ CROSS_ENCODER_MODEL = os.getenv(
 # out every chunk, since real CrossEncoder scores on this corpus run lower.
 MIN_RERANK_SCORE = float(os.getenv("MIN_RERANK_SCORE", "-5"))
 
+# Relative noise floor, applied only when there is enough signal to spare.
+#
+# MIN_RERANK_SCORE=-5 is an "always return something" floor, so on a CNIC
+# question the context also carried DrivingLicense.txt (0.07), Passport.txt
+# (-1.93) and a chunk at -3.29 — passages the CrossEncoder is actively saying
+# do NOT answer this question. They cost prompt tokens and invite cross-domain
+# bleed (a driving-licence "Original CNIC" line answering a CNIC question).
+#
+# So: if at least MIN_CHUNKS_ABOVE_FLOOR chunks clear RELEVANCE_FLOOR, drop
+# everything below it. If they don't, nothing is dropped — a thin-but-present
+# answer still beats "I could not find this information".
+RELEVANCE_FLOOR        = float(os.getenv("RELEVANCE_FLOOR", "0.0"))
+MIN_CHUNKS_ABOVE_FLOOR = int(os.getenv("MIN_CHUNKS_ABOVE_FLOOR", "3"))
+
 _cross_encoder: CrossEncoder | None = None
 
 
@@ -91,6 +105,12 @@ def rerank(
     # Filter out chunks below the minimum threshold
     # These are not grounded enough — including them would introduce noise
     scored_chunks = [c for c in scored_chunks if c["rerank_score"] >= MIN_RERANK_SCORE]
+
+    # Relative floor: only applied when enough chunks clear it, so this can
+    # never empty the context (see RELEVANCE_FLOOR above).
+    above_floor = [c for c in scored_chunks if c["rerank_score"] >= RELEVANCE_FLOOR]
+    if len(above_floor) >= MIN_CHUNKS_ABOVE_FLOOR:
+        scored_chunks = above_floor
 
     # Re-assign rank based on new ordering
     for i, chunk in enumerate(scored_chunks, start=1):

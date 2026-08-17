@@ -73,6 +73,126 @@ def score_sentences(
 
 
 # ---------------------------------------------------------------------------
+# 3b. STRUCTURED (LIST / PROCEDURE) CHUNKS
+# ---------------------------------------------------------------------------
+# A line that is a bullet ("- x", "* x", "• x") or a numbered step ("1. x", "2) x")
+LIST_LINE    = re.compile(r'^\s*(?:[-*•]|\d+[.)])\s+\S')
+HEADING_LINE = re.compile(r'^\s*#{1,6}\s+\S')
+
+# Word budget for a structured chunk. Generous compared to the 4-sentence
+# prose budget, because a requirements list is exactly the content the
+# citizen asked for — trimming it defeats the retrieval.
+MAX_STRUCTURED_WORDS = int(os.getenv("MAX_STRUCTURED_WORDS", "260"))
+
+
+def is_structured(text: str) -> bool:
+    """True if the text contains a real list (two or more list lines)."""
+    return sum(1 for line in text.split("\n") if LIST_LINE.match(line)) >= 2
+
+
+def split_blocks(text: str) -> list[str]:
+    """
+    Groups lines into blocks, keeping a list and its lead-in line together.
+
+    "Requirements:\\n- CNIC number\\n- Original card" is ONE block, so the
+    lead-in can never be kept while its items are dropped (or vice versa).
+    A blank line, or a plain line following list items, ends a block.
+    """
+    blocks: list[str] = []
+    current: list[str] = []
+    in_list = False
+
+    def flush():
+        nonlocal current, in_list
+        if current:
+            blocks.append("\n".join(current))
+        current, in_list = [], False
+
+    for line in text.split("\n"):
+        if not line.strip():
+            flush()
+            continue
+        if LIST_LINE.match(line):
+            current.append(line)
+            in_list = True
+        else:
+            if in_list:       # prose after a list starts a new block
+                flush()
+            current.append(line)
+
+    flush()
+    return blocks
+
+
+def compress_structured(
+    question: str,
+    chunk: dict[str, Any],
+    model: CrossEncoder,
+) -> dict[str, Any]:
+    """
+    Compresses a chunk that contains lists, WITHOUT breaking the lists.
+
+    Why this path exists:
+        The sentence-level compressor scores each sentence independently and
+        keeps the top MAX_SENTENCES_PER_CHUNK. Applied to NADRA's CNIC renewal
+        chunk, it kept process steps 1, 4 and 5 and deleted 2 and 3 — so the
+        context handed to the LLM read:
+
+            1. OIC Interview / Approval
+            4. Payment
+            5.
+
+        The deleted step 2 was "Biometric Capture", the single most important
+        thing a renewal applicant needs to know. Partial procedures are worse
+        than omitted ones: they look complete, so neither the model nor the
+        citizen can tell something is missing.
+
+    Instead we keep or drop whole blocks, ranked by relevance to the question,
+    up to a word budget. Section headings are always kept — "## CNIC RENEWAL"
+    is what stops the model from answering with the new-registration rules.
+    """
+    content = chunk.get("content") or ""
+    blocks  = split_blocks(content)
+
+    if not blocks:
+        chunk_copy = chunk.copy()
+        chunk_copy["content"]           = content
+        chunk_copy["compressed"]        = False
+        chunk_copy["original_length"]   = len(content)
+        chunk_copy["compressed_length"] = len(content)
+        return chunk_copy
+
+    scores = model.predict([(question, b) for b in blocks])
+
+    kept = {i for i, b in enumerate(blocks) if HEADING_LINE.match(b.strip())}
+    words = sum(len(blocks[i].split()) for i in kept)
+
+    # Highest-scoring blocks first, fitting each whole block into the budget.
+    for i in sorted(range(len(blocks)), key=lambda i: float(scores[i]), reverse=True):
+        if i in kept:
+            continue
+        block_words = len(blocks[i].split())
+        if words + block_words > MAX_STRUCTURED_WORDS:
+            continue   # doesn't fit — try the next (smaller) block
+        kept.add(i)
+        words += block_words
+
+    # Never return headings only — keep the single best block if nothing fit.
+    if all(HEADING_LINE.match(blocks[i].strip()) for i in kept):
+        kept.add(int(max(range(len(blocks)), key=lambda i: float(scores[i]))))
+
+    compressed_content = "\n".join(blocks[i] for i in sorted(kept))
+
+    chunk_copy = chunk.copy()
+    chunk_copy["content"]           = compressed_content
+    chunk_copy["compressed"]        = len(kept) < len(blocks)
+    chunk_copy["structured"]        = True
+    chunk_copy["original_length"]   = len(content)
+    chunk_copy["compressed_length"] = len(compressed_content)
+    return chunk_copy
+
+
+# ---------------------------------------------------------------------------
 # 4. COMPRESS ONE CHUNK
 # ---------------------------------------------------------------------------
 def compress_chunk(
@@ -110,6 +230,12 @@ def compress_chunk(
         chunk_copy["original_length"] = 0
         chunk_copy["compressed_length"] = 0
         return chunk_copy
+
+    # Structured chunks (a "Requirements:" list, a numbered process) are kept
+    # whole — see compress_structured() for why partial lists are worse than
+    # no list at all.
+    if is_structured(original_content):
+        return compress_structured(question, chunk, model)
 
     sentences = split_sentences(original_content)
 
