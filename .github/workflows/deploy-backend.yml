@@ -14,7 +14,9 @@ name: Deploy backend to Hugging Face
 
 on:
   push:
-    branches: [main]
+    # Both, because V1.4 lives on `v1.4` until main is moved onto it. Whichever
+    # of the two ends up being the deployed branch, the Space stays in sync.
+    branches: [main, v1.4]
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
