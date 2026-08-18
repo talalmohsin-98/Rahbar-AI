@@ -30,6 +30,47 @@ jobs:
         with:
           fetch-depth: 0    # subtree split needs full history, not a shallow clone
 
+      # Without this, a missing secret surfaces as a bare "Authentication
+      # failed" from git, which reads like a broken workflow rather than an
+      # unfinished setup. Fail loudly and specifically instead.
+      #
+      # Deliberately a failure and not a silent skip: a green check on a run
+      # that deployed nothing is worse than a red one, because you would go on
+      # believing the backend shipped.
+      - name: Preflight - deploy secrets and Space must exist
+        env:
+          HF_TOKEN:    ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE:    ${{ secrets.HF_SPACE }}
+        run: |
+          missing=""
+          if [ -z "${HF_TOKEN}" ];    then missing="${missing} HF_TOKEN"; fi
+          if [ -z "${HF_USERNAME}" ]; then missing="${missing} HF_USERNAME"; fi
+          if [ -z "${HF_SPACE}" ];    then missing="${missing} HF_SPACE"; fi
+
+          if [ -n "${missing}" ]; then
+            echo "::error::Missing repository secret(s):${missing}"
+            echo ""
+            echo "SETUP IS INCOMPLETE - this is not a code failure."
+            echo "Add them under: Settings -> Secrets and variables -> Actions"
+            echo "  HF_TOKEN     a WRITE-scoped token from huggingface.co/settings/tokens"
+            echo "  HF_USERNAME  your Hugging Face username"
+            echo "  HF_SPACE     the Space name, e.g. rahbar-ai-backend"
+            echo "Then re-run this workflow."
+            exit 1
+          fi
+
+          if ! curl -sfL -o /dev/null "https://huggingface.co/api/spaces/${HF_USERNAME}/${HF_SPACE}"; then
+            echo "::error::Space '${HF_USERNAME}/${HF_SPACE}' not found or not public."
+            echo ""
+            echo "Create it at huggingface.co/new-space with:"
+            echo "  SDK=Docker (Blank), Hardware=CPU basic (free), Visibility=Public"
+            echo "and make sure HF_USERNAME/HF_SPACE match it exactly."
+            exit 1
+          fi
+
+          echo "Preflight OK - deploying to ${HF_USERNAME}/${HF_SPACE}"
+
       - name: Push backend/ to the Space
         env:
           HF_TOKEN:    ${{ secrets.HF_TOKEN }}
