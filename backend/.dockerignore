@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+e2e_test.py
+test_*.py
+*_test.py
+.env
+*.env
+bm25_index.pkl

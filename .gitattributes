@@ -1,0 +1,19 @@
+# This repo is edited on Windows but built and run on Linux (Hugging Face
+# Spaces, GitHub Actions, Vercel). A CRLF that reaches a Linux shell shows up
+# as a trailing \r on every command — "uvicorn\r: not found" and similar.
+# Force LF on everything the Linux side executes or parses.
+
+* text=auto eol=lf
+
+Dockerfile   text eol=lf
+*.py         text eol=lf
+*.sh         text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.json       text eol=lf
+*.txt        text eol=lf
+
+# Binaries git must never touch.
+*.png binary
+*.jpg binary
+*.pkl binary

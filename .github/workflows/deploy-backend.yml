@@ -1,0 +1,49 @@
+# Pushes backend/ to the Hugging Face Space on every change to it.
+#
+# Hugging Face Spaces are their own git repos, and the Dockerfile has to sit at
+# the ROOT of that repo — not in a backend/ subfolder. `git subtree split`
+# rewrites the history of backend/ so that directory becomes the root, and we
+# push that rewritten branch to the Space.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   HF_TOKEN     a write-scoped token from huggingface.co/settings/tokens
+#   HF_USERNAME  your Hugging Face username
+#   HF_SPACE     the Space name, e.g. rahbar-ai-backend
+
+name: Deploy backend to Hugging Face
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:        # lets you trigger it by hand from the Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # subtree split needs full history, not a shallow clone
+
+      - name: Push backend/ to the Space
+        env:
+          HF_TOKEN:    ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE:    ${{ secrets.HF_SPACE }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # Rewrite backend/ as its own root-level history; prints a commit SHA.
+          SUBTREE_SHA=$(git subtree split --prefix=backend HEAD)
+
+          # --force because the Space was created with its own initial commit,
+          # which this rewritten history does not descend from. The Space is a
+          # deploy target, not a source of truth.
+          git push --force \
+            "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE" \
+            "$SUBTREE_SHA:main"
