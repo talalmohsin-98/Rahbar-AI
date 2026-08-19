@@ -1,10 +1,11 @@
 # Backend runtime dependencies, pinned to the versions this project was built
-# and tested against locally. Unpinned installs drift; a Docker rebuild six
+# and tested against locally. Unpinned installs drift; a fresh install six
 # months from now would silently pull a different LangChain and break.
 #
-# torch is NOT listed here on purpose — the Dockerfile installs the CPU-only
-# wheel from PyTorch's own index first. The default PyPI torch wheel bundles
-# CUDA and is ~2.5GB; the CPU wheel is ~200MB and the free HF Space has no GPU.
+# torch is NOT listed here on purpose. sentence-transformers pulls it in, and
+# the default PyPI wheel bundles CUDA at ~2.5GB. On a machine without an NVIDIA
+# GPU, install the CPU-only wheel (~200MB) first:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 fastapi==0.141.1
 uvicorn==0.52.3
@@ -30,3 +31,8 @@ pypdf==6.16.1
 beautifulsoup4==4.15.0
 python-dotenv==1.2.3
 python-multipart==0.0.32
+
+# mcp_server.py only. It used to be omitted here because the deployed API
+# process never imported it and the image had a size budget; with no deploy,
+# a root install that cannot run the documented MCP server is just broken.
+mcp==2.0.0

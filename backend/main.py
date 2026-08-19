@@ -16,17 +16,17 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# CORS. Starlette compares allow_origins by exact string, so a glob like
-# "https://*.vercel.app" matches nothing — it silently blocks every Vercel
-# preview deploy. Globs belong in allow_origin_regex, which is the one field
-# that is actually pattern-matched.
+# CORS. The Vite dev server (5173) and a plain `serve dist` (3000) are the two
+# origins this runs behind locally. Starlette compares allow_origins by exact
+# string — a glob like "http://localhost:*" matches nothing — so any other
+# origin (a LAN IP for testing on a phone, say) has to be listed explicitly via
+# FRONTEND_URL rather than pattern-matched.
 _allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
 ]
-# The production frontend origin, set as an env var on the Space so a domain
-# change never needs a code change. Split on commas so a custom domain and its
-# www variant can both be listed.
 for _origin in os.getenv("FRONTEND_URL", "").split(","):
     _origin = _origin.strip().rstrip("/")
     if _origin:
@@ -35,9 +35,6 @@ for _origin in os.getenv("FRONTEND_URL", "").split(","):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    # Vercel gives every branch and commit its own preview hostname. This lets
-    # those through without re-deploying the backend for each one.
-    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

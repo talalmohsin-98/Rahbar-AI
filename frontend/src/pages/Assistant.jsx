@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { formatAnswer } from '../lib/chatFormatting';
+import PipelinePanel from '../components/PipelinePanel';
 
 /**
  * Trust badges under an answer.
@@ -49,7 +50,7 @@ function AnswerBadges({ data }) {
   );
 }
 
-function Message({ msg }) {
+function Message({ msg, onInspect }) {
   const isUser = msg.role === 'user';
   const isDecline = msg.declined;
 
@@ -97,6 +98,23 @@ function Message({ msg }) {
           </div>
 
           {msg.pipelineData && <AnswerBadges data={msg.pipelineData} />}
+
+          {/* The badges above are the summary; this opens the full trace for
+              THIS answer, so an older message in the thread can still be
+              inspected after newer ones have arrived. */}
+          {msg.pipelineData && (
+            <button
+              onClick={() => onInspect?.(msg.pipelineData)}
+              style={{
+                marginTop: 10, background: 'none', border: 'none', padding: 0,
+                cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                color: 'var(--slate)', textDecoration: 'underline',
+                textUnderlineOffset: 3,
+              }}
+            >
+              Inspect pipeline →
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -180,6 +198,16 @@ export default function Assistant() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Pipeline Inspector. `panelData` is the trace being shown, which defaults to
+  // the most recent answer but sticks to whichever answer the user inspected.
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelData, setPanelData] = useState(null);
+
+  const inspect = (data) => {
+    setPanelData(data);
+    setPanelOpen(true);
+  };
+
   // Pre-seed from query param (handoff from Services/Wizard)
   useEffect(() => {
     const q = searchParams.get('q');
@@ -220,6 +248,9 @@ export default function Assistant() {
         pipelineData: data,
         chunks: data.compressed_chunks || [],
       }]);
+      // Keep the inspector pointed at the newest answer. If it's already open,
+      // it refreshes in place rather than showing a stale trace.
+      setPanelData(data);
     } catch (e) {
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -262,6 +293,14 @@ export default function Assistant() {
               </div>
             </div>
           </div>
+
+          <button
+            onClick={() => setPanelOpen(o => !o)}
+            className="btn btn-outline"
+            style={{ padding: '8px 14px', fontSize: 13 }}
+          >
+            {panelOpen ? '✕ Hide pipeline' : '⚙ Pipeline Inspector'}
+          </button>
         </div>
 
         {/* Messages */}
@@ -299,7 +338,7 @@ export default function Assistant() {
               the whole viewport on wide screens. */}
           <div style={{ maxWidth: 800, margin: '0 auto' }}>
             {messages.map((msg, i) => (
-              <Message key={i} msg={msg} />
+              <Message key={i} msg={msg} onInspect={inspect} />
             ))}
             {loading && <TypingIndicator />}
           </div>
@@ -342,6 +381,15 @@ export default function Assistant() {
           </p>
         </div>
       </div>
+
+      {/* Every stage of the run that produced the answer. The panel is fixed to
+          the right edge and slides in, so it overlays the chat rather than
+          reflowing it mid-conversation. */}
+      <PipelinePanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        data={panelData}
+      />
     </div>
   );
 }

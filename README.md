@@ -59,7 +59,8 @@ official-documentation files in [`data/`](data/).
 
 ## Screenshots
 
-Images live in [`data/images/`](data/images/) — see that folder's README for exact filenames expected.
+Captured from the app running locally. There is no hosted demo — see
+[Getting started](#getting-started) to run it yourself.
 
 ### Home
 
@@ -79,7 +80,10 @@ Images live in [`data/images/`](data/images/) — see that folder's README for e
 
 ### Assistant — Pipeline Inspector
 
-See every stage of the RAG pipeline (intent, rewritten queries, retrieval, reranking, verification) for the answer above.
+The **Pipeline Inspector** button in the chat header (or **Inspect pipeline →**
+under any answer) opens the full trace for that run: detected intent, every
+rewritten query, the RRF-fused and reranked chunks with their scores, token
+counts, and all three verification results.
 
 <img src="data/images/assistant-pipeline.png" alt="Pipeline inspector panel" width="100%">
 
@@ -162,8 +166,8 @@ All state flows through a single `PipelineState` TypedDict inside a compiled **L
 | Reranker | **`cross-encoder/ms-marco-MiniLM-L-6-v2`** | Reused for reranking, compression, and citation/hallucination scoring |
 | Orchestration | **LangGraph** `StateGraph` | Conditional edges + a bounded retry loop |
 | Tool protocol | **MCP** (`mcp` Python SDK, SSE transport) | Standalone server on port 8001 |
-| Backend | **FastAPI** (Railway) | |
-| Frontend | **React 19 + Vite + React Router 7** (Vercel) | Mixed JS/TSX, `oxlint` |
+| Backend | **FastAPI** | Run locally with `uvicorn` |
+| Frontend | **React 19 + Vite + React Router 7** | Mixed JS/TSX, `oxlint` |
 
 ## Project structure
 
@@ -266,8 +270,6 @@ npm install
 npm run dev                       # Vite dev server on http://localhost:5173
 ```
 
-Full command reference — including every command already used to build this project and every command still needed to finish, commit, and deploy it — lives in **[COMMANDS.md](COMMANDS.md)**.
-
 ## API reference
 
 | Method | Endpoint | Purpose |
@@ -310,7 +312,6 @@ This is a portfolio/research project, and the README won't pretend otherwise:
 - [ ] Add connection pooling (pgbouncer) for the retrieval path
 - [ ] Multi-turn conversational memory (currently stateless per request)
 - [ ] Swap the cross-encoder citation check for a dedicated NLI model
-- [ ] CI (GitHub Actions) running `pytest` + `npm run build` on every PR
 
 ---
 

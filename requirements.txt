@@ -1,17 +1,6 @@
-fastapi 
-uvicorn 
-langgraph 
-langchain 
-langchain-groq
-langchain-core
-langchain-classic
-groq 
-psycopg2-binary 
-pgvector 
-pypdf 
-beautifulsoup4 
-python-dotenv 
-mcp
-sentence-transformers
-rank-bm25
-numpy
+# Versions live in backend/requirements.txt, pinned to what this project was
+# built and tested against. Keeping a second, unpinned copy here meant two
+# lists that could drift apart; this file defers to the one that is pinned so
+# `pip install -r requirements.txt` still works from the project root.
+
+-r backend/requirements.txt

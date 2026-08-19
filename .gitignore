@@ -1,24 +1,36 @@
-# Environment variables
+# ── Secrets ──────────────────────────────────────────────────────────────────
 .env
 *.env
 # the bare-named root file — `.env` and `*.env` above do NOT match it
 /env
 
-# Python
+# ── Python ───────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
+.pytest_cache/
 rahbar_ai/
 venv/
 .venv/
 
-# Node
+# ── Node ─────────────────────────────────────────────────────────────────────
 node_modules/
 
-# Build
+# ── Build output ─────────────────────────────────────────────────────────────
 dist/
 build/
 
-# Local files
+# ── Generated at runtime ─────────────────────────────────────────────────────
+# BM25 index — rebuilt from data/ on first search, so it never belongs in git.
+*.pkl
 *.log
 
-backend/bm25_index.pkl
+# ── CI / automation ──────────────────────────────────────────────────────────
+# This project is run locally only; nothing here is deployed, so no workflows
+# are tracked.
+.github/
+
+# ── Editor / OS ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
