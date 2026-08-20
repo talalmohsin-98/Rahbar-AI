@@ -304,6 +304,22 @@ This is a portfolio/research project, and the README won't pretend otherwise:
 - **No connection pooling** — each retrieval opens a fresh `psycopg2` connection. Fine at demo scale; would need `pgbouncer` in production.
 - **Citation regex has a known limitation** with abbreviations like "Rs." inside a sentence — documented and deliberately left as-is rather than papered over (see `tests/test_pipeline_fixes.py`).
 - **Citation/hallucination checks use a general-purpose cross-encoder**, not a dedicated NLI model (e.g. `facebook/bart-large-mnli`) — a reasonable scope tradeoff, called out explicitly in the code.
+- **The gate cannot tell a retrieval miss from a false premise.** Asking about a
+  category that does not exist — "What is Gamma Family FRC?", where the corpus
+  names Alpha/Beta/Gama family FRC in one fee row and never defines them — looks
+  identical to a question whose answer simply was not retrieved. Both surface as
+  "sources may not cover your exact question". Distinguishing them needs the
+  system to reason about whether the *term itself* is attested in the corpus,
+  which is a different check from the three that exist. Deliberately not
+  attempted here: getting it wrong in the confident direction is exactly the
+  failure this project is built to avoid.
+- **Code-switched Urdu-English input is mitigated, not solved.** The embedder
+  (`BAAI/bge-large-en`) is English-only, so mixed-language questions retrieve
+  badly. `input_analysis.py` detects both script-mixed and romanized Urdu and
+  the rewriter adds an English translation as an extra search query, but the
+  original question still embeds poorly and the romanized detector is a
+  function-word heuristic, not a language model. Answers to such questions are
+  deliberately never marked fully verified.
 
 ## Roadmap
 

@@ -67,6 +67,8 @@ export default function PipelinePanel({ open, onClose, data }) {
     raw_chunks = [], reranked_chunks = [], compressed_chunks = [],
     tool_results = [], generation_meta = {}, citation_result = {},
     hallucination_result = {}, completeness_result = {}, retry_count = 0,
+    verification_verdict = null, input_analysis = null,
+    attestation_result = {},
   } = data;
 
   // Both rates are null when the stage couldn't measure anything (no citations
@@ -75,9 +77,12 @@ export default function PipelinePanel({ open, onClose, data }) {
   const halRate = hallucination_result?.hallucination_rate;
   const citRate = citation_result?.verification_rate;
   const pct = (r) => (r === null || r === undefined ? 'not measured' : `${Math.round(r * 100)}%`);
-  const allChecksPassed = citation_result?.passed !== false
-    && hallucination_result?.passed !== false
-    && completeness_result?.passed !== false;
+
+  // This panel used to recompute its own "overall" from the three results
+  // while the answer badges computed a different one from two of them. One
+  // backend verdict now drives both, so the inspector can never disagree with
+  // what the citizen was shown.
+  const verdictStatus = verification_verdict?.status ?? 'unverified';
 
   return (
     <div className={`pipeline-panel${open ? ' open' : ''}`}>
@@ -112,6 +117,29 @@ export default function PipelinePanel({ open, onClose, data }) {
             value={routing_config?.answer_format?.split(' ').slice(0,3).join(' ') || '—'}
             colour="rgba(255,255,255,.7)" />
         </div>
+
+        {/* Stage 1b: Input analysis — only when it found something worth
+            saying. A plain English single-domain question shows nothing. */}
+        {input_analysis && (input_analysis.code_switched || input_analysis.compound) && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B',
+                          textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 8 }}>
+              ⚠ Input Analysis
+            </div>
+            {input_analysis.code_switched && (
+              <StageRow icon="" label="Code-switched"
+                value={input_analysis.code_switch_kind}
+                sub="English-only embedder — English variant added to the search"
+                colour="#F59E0B" />
+            )}
+            {input_analysis.compound && (
+              <StageRow icon="" label="Spans domains"
+                value={input_analysis.domains.join(' + ')}
+                sub="one extra retrieval query per domain"
+                colour="#F59E0B" />
+            )}
+          </div>
+        )}
 
         {/* Stage 2: Queries */}
         <div style={{ marginBottom: 16 }}>
@@ -229,9 +257,31 @@ export default function PipelinePanel({ open, onClose, data }) {
             colour={completeness_result?.status === 'thin' ? '#F59E0B'
                   : completeness_result?.status === 'complete' ? 'var(--green)'
                   : 'rgba(255,255,255,.5)'} />
+          <StageRow icon="" label="Term attestation"
+            value={attestation_result?.status === 'missing' ? '⚠ not in sources'
+                 : attestation_result?.status === 'attested' ? '✓ terms found'
+                 : '—'}
+            sub={attestation_result?.missing?.length
+              ? `never mentioned: ${attestation_result.missing.join(', ')}`
+              : undefined}
+            colour={attestation_result?.status === 'missing' ? '#F59E0B'
+                  : attestation_result?.status === 'attested' ? 'var(--green)'
+                  : 'rgba(255,255,255,.5)'} />
           <StageRow icon="" label="Overall"
-            value={allChecksPassed ? '✓ PASSED' : '⚠ FLAGGED'}
-            colour={allChecksPassed ? 'var(--green)' : '#F59E0B'} />
+            value={verdictStatus === 'verified' ? '✓ PASSED'
+                 : verdictStatus === 'partial'  ? '⚠ FLAGGED'
+                 : '— NOT VERIFIED'}
+            sub={verification_verdict?.headline}
+            colour={verdictStatus === 'verified' ? 'var(--green)'
+                  : verdictStatus === 'partial'  ? '#F59E0B'
+                  : 'rgba(255,255,255,.5)'} />
+          {verification_verdict?.reasons?.map((r, i) => (
+            <div key={i} style={{
+              fontSize: 11, color: '#F59E0B', marginTop: 6,
+              paddingLeft: 10, borderLeft: '2px solid rgba(245,158,11,.4)',
+              lineHeight: 1.5,
+            }}>{r}</div>
+          ))}
         </div>
       </div>
     </div>

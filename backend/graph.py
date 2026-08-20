@@ -38,6 +38,7 @@ WHY LANGGRAPH:
 """
 
 import operator
+import sys
 from typing import Any, Literal, Optional
 from typing_extensions import TypedDict
 
@@ -54,6 +55,21 @@ from completeness_check import check_completeness, build_retry_feedback
 from generator          import generate
 from hallucination_eval import evaluate_hallucination
 from mcp_tools          import call_tool, select_tools_for_question
+from input_analysis     import analyse as analyse_input
+from verification_verdict import (build_verdict, check_term_attestation,
+                                  is_refusal, refusal_results)
+
+
+# Every node below prints the question and answer it is working on. On a
+# Windows console those streams default to cp1252, which cannot encode Urdu
+# script — so a code-switched question would take down the whole request from
+# inside a print(), long before retrieval got a chance to be bad at it.
+# Degrade unencodable characters instead of raising.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass  # already-wrapped or non-reconfigurable stream; nothing to do
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +101,7 @@ class PipelineState(TypedDict, total=False):
     question:             str
     intent:               str
     routing_config:       dict
+    input_analysis:       dict
     search_queries:       list
     raw_chunks:           list
     reranked_chunks:      list
@@ -96,6 +113,8 @@ class PipelineState(TypedDict, total=False):
     citation_result:      dict
     hallucination_result: dict
     completeness_result:  dict
+    attestation_result:   dict
+    verification_verdict: dict
     retry_feedback:       str
     generation_attempts:  int
     retry_count:          int
@@ -109,6 +128,7 @@ def initial_state(question: str) -> dict:
         "question":             question,
         "intent":               None,
         "routing_config":       None,
+        "input_analysis":       None,
         "search_queries":       [],
         "raw_chunks":           [],
         "reranked_chunks":      [],
@@ -120,6 +140,8 @@ def initial_state(question: str) -> dict:
         "citation_result":      None,
         "hallucination_result": None,
         "completeness_result":  None,
+        "attestation_result":   None,
+        "verification_verdict": None,
         "retry_feedback":       None,
         "generation_attempts":  0,
         "retry_count":          0,
@@ -146,6 +168,17 @@ def planner_node(state: PipelineState) -> dict:
     """
     print(f"\n[Planner] Question: {state['question'][:80]}")
 
+    # Deterministic, LLM-free inspection of the raw question. Runs first
+    # because both the rewriter (which needs to know it should translate and
+    # fan out per domain) and the final verdict (which must not claim
+    # confidence on a query the embedder cannot represent) depend on it.
+    analysis = analyse_input(state["question"])
+    if analysis["code_switched"]:
+        print(f"[Planner] Code-switched input ({analysis['code_switch_kind']})"
+              f" - retrieval confidence downgraded")
+    if analysis["compound"]:
+        print(f"[Planner] Compound question spans {analysis['domains']}")
+
     intent = route(state["question"])
     config = get_routing_config(intent)
 
@@ -154,6 +187,7 @@ def planner_node(state: PipelineState) -> dict:
     return {
         "intent":         intent.value,
         "routing_config": config,
+        "input_analysis": analysis,
     }
 
 
@@ -207,7 +241,7 @@ def rag_agent_node(state: PipelineState) -> dict:
 
     # Step 1: Rewrite query
     print("[RAGAgent] Rewriting query...")
-    queries = rewrite(question, intent)
+    queries = rewrite(question, intent, state.get("input_analysis"))
     print(f"[RAGAgent] {len(queries)} search queries generated")
 
     # Step 2: Hybrid search across all query variants
@@ -342,7 +376,26 @@ def verification_agent_node(state: PipelineState) -> dict:
     if not answer:
         return {"final_answer": "No answer was generated.",
                 "citation_result": None, "hallucination_result": None,
-                "completeness_result": None}
+                "completeness_result": None, "attestation_result": None,
+                "verification_verdict": build_verdict(
+                    None, None, None, state.get("input_analysis"), None)}
+
+    # An explicit refusal asserts nothing, so there is nothing to verify. QA
+    # found the checkers scoring the decline sentence itself as an unsupported
+    # claim, which showed the citizen a warning about the absence of support
+    # for a sentence that says there is no support - and sent a correct refusal
+    # back through the retry loop. Both are fixed by not asking the question.
+    if is_refusal(answer):
+        print("[VerificationAgent] Answer is an explicit refusal - checks not applicable")
+        results = refusal_results()
+        verdict = build_verdict(
+            results["citation_result"], results["hallucination_result"],
+            results["completeness_result"], state.get("input_analysis"),
+            results["attestation_result"], refused=True)
+        print(f"[VerificationAgent] Verdict: {verdict['status'].upper()}"
+              f" - {verdict['headline']}")
+        return {**results, "verification_verdict": verdict,
+                "retry_feedback": None, "final_answer": answer}
 
     # Step 1: Citation verification
     print("[VerificationAgent] Verifying citations...")
@@ -361,10 +414,31 @@ def verification_agent_node(state: PipelineState) -> dict:
     completeness_result = check_completeness(answer, chunks)
     print(f"[VerificationAgent] Completeness: {completeness_result['summary']}")
 
+    # Step 4: Term attestation. The three checks above all interrogate the
+    # answer; this one asks whether the sources mention what was asked about at
+    # all. Deterministic and free — no model call. See verification_verdict.py
+    # for the "Gamma Family FRC" case that motivated it.
+    attestation_result = check_term_attestation(state.get("question", ""), chunks)
+    print(f"[VerificationAgent] Attestation: {attestation_result['summary']}")
+
+    # Step 5: One verdict, one owner. Before this existed the badges derived
+    # their own answer from citations+grounding only, ignoring completeness
+    # entirely, while the inspector panel derived a different one inline. Two
+    # surfaces, two rules. Both now render this field instead of re-deriving.
+    verdict = build_verdict(citation_result, hallucination_result,
+                            completeness_result, state.get("input_analysis"),
+                            attestation_result)
+    print(f"[VerificationAgent] Verdict: {verdict['status'].upper()}"
+          f" - {verdict['headline']}")
+    for _reason in verdict["reasons"]:
+        print(f"[VerificationAgent]   . {_reason}")
+
     return {
         "citation_result":      citation_result,
         "hallucination_result": hallucination_result,
         "completeness_result":  completeness_result,
+        "attestation_result":   attestation_result,
+        "verification_verdict": verdict,
         # Quote the dropped passages back to the generator if we regenerate.
         "retry_feedback": (
             build_retry_feedback(completeness_result["unused_blocks"])
@@ -407,6 +481,12 @@ def route_after_verification(state: PipelineState) -> Literal["generator", "end"
     """
     # `or {}` — not just a default arg: verification_agent_node sets these keys
     # to None when there was no answer to check, and None.get() would crash.
+    # NOTE: attestation_result is deliberately NOT consulted here. The other
+    # three failures describe an answer that could have been written better
+    # from the same context, so regenerating is worth one shot. An unattested
+    # term is a fact about the CORPUS, not the answer — "Gamma" will still be
+    # absent on the second attempt, so a retry burns a generation to arrive at
+    # the identical verdict. It downgrades the badge; it does not re-roll.
     citation_ok      = (state.get("citation_result") or {}).get("passed", True)
     hallucination_ok = (state.get("hallucination_result") or {}).get("passed", True)
     complete_ok      = (state.get("completeness_result") or {}).get("passed", True)

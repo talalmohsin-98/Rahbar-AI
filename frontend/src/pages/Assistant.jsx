@@ -7,26 +7,53 @@ import PipelinePanel from '../components/PipelinePanel';
 /**
  * Trust badges under an answer.
  *
- * These must never claim more than the pipeline actually checked. The old
- * version rendered a green "✓ Citations verified" whenever `passed !== false`
- * — which included the case where the verifier parsed ZERO citations and
- * couldn't check anything, and the case where citation_result was null. It
- * also printed "Hal rate: 0%" when no claim had been evaluated at all.
- * Both read as a guarantee to a citizen acting on the answer.
+ * These must never claim more than the pipeline actually checked, and they
+ * have now been wrong in two different ways.
  *
- * So: green only for a real, non-empty verification; yellow when claims were
- * flagged; neutral grey when nothing could be checked.
+ * First: a green "✓ Citations verified" rendered whenever `passed !== false`,
+ * which included the verifier parsing ZERO citations and checking nothing.
+ *
+ * Second, and worse: the badges only ever consulted two of the three checks.
+ * `completeness_result` — the check that asks whether the answer actually used
+ * what retrieval found — was computed, logged, shown in the inspector, and
+ * ignored here. An answer the pipeline had FLAGGED still wore full green.
+ *
+ * The fix is not more logic in this file. It is that the backend now emits a
+ * single `verification_verdict` and this component renders it. Deriving a
+ * verdict in the UI is what allowed the UI to disagree with the pipeline.
  */
 function AnswerBadges({ data }) {
+  const verdict = data.verification_verdict;
   const cit = data.citation_result;
   const hal = data.hallucination_result;
 
-  const citStatus  = cit?.status ?? (cit?.passed === false ? 'flagged' : 'unverifiable');
+  // THE GATE. Everything below reads this one field rather than re-deriving a
+  // verdict from the individual checks. The bug this replaces: these badges
+  // read citation_result and hallucination_result and never looked at
+  // completeness_result, so "What is Gamma Family FRC?" — which the pipeline
+  // FLAGGED for using almost none of what it retrieved — still rendered as
+  // full green "2/2 claims grounded · 2 citations verified".
+  //
+  // No verdict means an older/partial payload, and the safe reading of "I
+  // don't know" is never green.
+  const status = verdict?.status ?? 'unverified';
+  const isVerified = status === 'verified';
+
+  const verdictBadge =
+    status === 'verified' ? { cls: 'badge--green',  text: '✓ Grounded' }
+  : status === 'partial'  ? { cls: 'badge--yellow', text: `⚠ ${verdict.headline}` }
+  :                         { cls: 'badge--slate',  text: 'Not verified' };
+
+  // Detail badges keep their counts either way — the numbers are still true
+  // and still useful. What they lose on a flagged answer is the green: a
+  // count is a fact about one check, not a verdict on the answer.
   const checked    = cit?.checked_count ?? 0;
   const unverified = cit?.unverified_claims?.length ?? 0;
+  const citStatus  = cit?.status ?? (cit?.passed === false ? 'flagged' : 'unverifiable');
 
   const citBadge =
-    citStatus === 'verified'   ? { cls: 'badge--green', text: `✓ ${checked} citation${checked === 1 ? '' : 's'} verified` }
+    citStatus === 'verified'   ? { cls: isVerified ? 'badge--green' : 'badge--slate',
+                                   text: `${checked} citation${checked === 1 ? '' : 's'} checked` }
   : citStatus === 'flagged'    ? { cls: 'badge--yellow', text: `⚠ ${unverified} of ${checked} citations unverified` }
   : citStatus === 'not_applicable' ? null
   :                              { cls: 'badge--slate', text: 'Citations not verified' };
@@ -35,17 +62,34 @@ function AnswerBadges({ data }) {
   const halBadge =
     hal?.status !== 'evaluated' || evaluated === 0
       ? { cls: 'badge--slate', text: 'Grounding not checked' }
-      : { cls: hal.hallucinated_count > 0 ? 'badge--yellow' : 'badge--green',
+      : { cls: hal.hallucinated_count > 0 ? 'badge--yellow'
+                                          : (isVerified ? 'badge--green' : 'badge--slate'),
           text: `${hal.grounded_count}/${evaluated} claims grounded` };
 
   return (
-    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-      {citBadge && <span className={`badge ${citBadge.cls}`}>{citBadge.text}</span>}
-      <span className={`badge ${halBadge.cls}`}>{halBadge.text}</span>
-      {data.generation_meta?.truncated && (
-        <span className="badge badge--yellow">⚠ Answer cut off</span>
+    <div style={{ marginTop: 10 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <span className={`badge ${verdictBadge.cls}`}>{verdictBadge.text}</span>
+        {citBadge && <span className={`badge ${citBadge.cls}`}>{citBadge.text}</span>}
+        <span className={`badge ${halBadge.cls}`}>{halBadge.text}</span>
+        {data.generation_meta?.truncated && (
+          <span className="badge badge--yellow">⚠ Answer cut off</span>
+        )}
+        <span className="badge badge--navy">{data.intent}</span>
+      </div>
+
+      {/* Why it isn't green, in the citizen's terms. A warning colour with no
+          explanation just makes someone distrust the whole tool; naming the
+          gap tells them what to do about it (ask more specifically, or go
+          verify this particular line). */}
+      {status !== 'verified' && verdict?.reasons?.length > 0 && (
+        <ul style={{
+          margin: '8px 0 0', paddingLeft: 18, listStyle: 'disc',
+          fontSize: 12.5, lineHeight: 1.6, color: 'var(--text-soft)',
+        }}>
+          {verdict.reasons.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
       )}
-      <span className="badge badge--navy">{data.intent}</span>
     </div>
   );
 }
